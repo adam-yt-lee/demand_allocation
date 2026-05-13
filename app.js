@@ -8,6 +8,7 @@ let cardChecked    = {};
 let cardExpanded   = {};
 let collapsedMonths = {};
 let nameSelections  = {}; // { "DemandKey_idx": selectedName }
+let collapsedStockGroups = {};
 
 function poolKey(group, name) {
   return `${group}__${name}`;
@@ -137,6 +138,7 @@ function parseWorkbook(wb, filename) {
   cardChecked     = {};
   cardExpanded    = {};
   collapsedMonths = {};
+  collapsedStockGroups = {};
   cardOrder.forEach(k => { cardChecked[k] = true; cardExpanded[k] = false; });
 
   document.getElementById('file-status').textContent = filename;
@@ -487,33 +489,55 @@ function renderSummary(results) {
 function renderStockTable(committedByKey) {
   const tbody = document.getElementById('stock-tbody');
   tbody.innerHTML = '';
+  const groupMap = {};
+  const groupOrder = [];
   const seen = new Set();
-  let prevGroup = null;
 
   supplyRows.forEach(r => {
+    if (!groupMap[r.group]) {
+      groupMap[r.group] = [];
+      groupOrder.push(r.group);
+    }
     const key = poolKey(r.group, r.name);
     if (seen.has(key)) return;
     seen.add(key);
+    groupMap[r.group].push({ ...r, key });
+  });
 
-    const sOrig    = supplyRows.filter(s => poolKey(s.group, s.name) === key && s.month === 'STOCK').reduce((a, s) => a + s.qty, 0);
-    const iOrig    = supplyRows.filter(s => poolKey(s.group, s.name) === key && s.month !== 'STOCK').reduce((a, s) => a + s.qty, 0);
-    const committed = committedByKey[key] || 0;
-    const balance   = sOrig + iOrig - committed;
+  groupOrder.forEach(group => {
+    const rows = groupMap[group];
+    const isCollapsed = !!collapsedStockGroups[group];
 
-    const tr = document.createElement('tr');
-    if (prevGroup !== null && prevGroup !== r.group) {
-      tr.classList.add('stock-group-sep');
-    }
-    tr.innerHTML = `
-      <td>${esc(r.group)}</td>
-      <td>${esc(r.name)}</td>
-      <td>${fmt(sOrig)}</td>
-      <td>${fmt(iOrig)}</td>
-      <td>${fmt(committed)}</td>
-      <td class="${numClass(balance)}">${fmt(balance)}</td>
-    `;
-    tbody.appendChild(tr);
-    prevGroup = r.group;
+    const hdrTr = document.createElement('tr');
+    hdrTr.className = 'stock-group-header';
+    hdrTr.innerHTML = `<td colspan="6">
+      <div class="sg-header${isCollapsed ? ' collapsed' : ''}">
+        <span class="sg-arrow">▾</span>
+        <span class="sg-label">${esc(group)}</span>
+        <span class="sg-count">${rows.length}筆</span>
+      </div>
+    </td>`;
+    hdrTr.onclick = () => { collapsedStockGroups[group] = !collapsedStockGroups[group]; renderAll(); };
+    tbody.appendChild(hdrTr);
+
+    rows.forEach(r => {
+      const sOrig    = supplyRows.filter(s => poolKey(s.group, s.name) === r.key && s.month === 'STOCK').reduce((a, s) => a + s.qty, 0);
+      const iOrig    = supplyRows.filter(s => poolKey(s.group, s.name) === r.key && s.month !== 'STOCK').reduce((a, s) => a + s.qty, 0);
+      const committed = committedByKey[r.key] || 0;
+      const balance   = sOrig + iOrig - committed;
+
+      const tr = document.createElement('tr');
+      tr.className = `stock-item-row${isCollapsed ? ' collapsed' : ''}`;
+      tr.innerHTML = `
+        <td></td>
+        <td>${esc(r.name)}</td>
+        <td>${fmt(sOrig)}</td>
+        <td>${fmt(iOrig)}</td>
+        <td>${fmt(committed)}</td>
+        <td class="${numClass(balance)}">${fmt(balance)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
   });
 }
 

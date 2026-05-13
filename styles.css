@@ -171,7 +171,30 @@
   tbody tr:last-child td { border-bottom: none; }
   tbody td:first-child { text-align: left; color: var(--text-dim); font-size: 10px; }
   tbody td:nth-child(2) { text-align: left; color: var(--text); }
-  tbody tr.stock-group-sep td { border-top: 2px solid var(--accent); padding-top: 8px; background: linear-gradient(180deg, rgba(79,124,255,.10), rgba(79,124,255,0) 70%); }
+  tbody tr.stock-group-header td {
+    text-align: left;
+    padding: 3px 8px;
+    background: var(--surface);
+    border-bottom: 1px solid rgba(212,218,240,.08);
+  }
+  .sg-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    border-radius: 3px;
+  }
+  .sg-header:hover { color: var(--text); }
+  .sg-arrow { font-size: 9px; transition: transform .15s; }
+  .sg-header.collapsed .sg-arrow { transform: rotate(-90deg); }
+  .sg-label { color: var(--accent); font-weight: 600; letter-spacing: .05em; }
+  .sg-count { color: var(--text-muted); }
+  tbody tr.stock-item-row.collapsed { display: none; }
   .num-pos { color: var(--green); }
   .num-neg { color: var(--red); }
   .num-zero { color: var(--text-muted); }
