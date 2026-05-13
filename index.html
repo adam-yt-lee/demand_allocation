@@ -816,8 +816,16 @@ function _solveAndApply() {
     return t;
   }
 
-  // ── Build demand list (all demands, ignore current cardChecked) ──
-  const demandList = cardOrder.map(key => {
+  // ── Build demand list（僅限已勾選的 Demand）──────────────────────
+  const checkedKeys   = cardOrder.filter(k => cardChecked[k] === true);
+  const uncheckedKeys = cardOrder.filter(k => cardChecked[k] !== true);
+
+  if (!checkedKeys.length) {
+    showToast('請先勾選至少一筆需求');
+    return;
+  }
+
+  const demandList = checkedKeys.map(key => {
     const d     = demandMap[key];
     const month = getAdoptedMonth(key);
     const items = d.items.map((item, idx) => {
@@ -927,26 +935,24 @@ function _solveAndApply() {
   bnb(0, 0, {}, {});
 
   // ── Apply results ────────────────────────────────────────────────
-  // 1. Name selections
+  // 1. Name selections（只更新勾選的 Demand）
   Object.assign(nameSelections, bestAssignments);
 
-  // 2. Mark all demands active; optimal set comes first so that the
-  //    sequential calculate() deducts in a month-safe order and
-  //    correctly satisfies all demands in the optimal set.
-  cardOrder.forEach(k => { cardChecked[k] = true; });
-
-  const satArr  = [...bestSatisfied]
+  // 2. 不改變 cardChecked；重排順序：
+  //    最優集合（勾選且可滿足）→ 其餘勾選 → 未勾選
+  //    確保 calculate() 的順序式扣料能正確滿足最優集合
+  const satArr       = [...bestSatisfied]
     .sort((a, b) => demandMap[a].month - demandMap[b].month);
-  const restArr = cardOrder
+  const unsatChecked = checkedKeys
     .filter(k => !bestSatisfied.has(k))
     .sort((a, b) => demandMap[a].month - demandMap[b].month);
-  cardOrder = [...satArr, ...restArr];
+  cardOrder = [...satArr, ...unsatChecked, ...uncheckedKeys];
 
   renderAll();
 
   // ── Show result toast ────────────────────────────────────────────
   const label = timedOut ? '最佳化（達時限，非最優解）' : '最佳解';
-  showToast(`⚡ ${label}：可滿足 ${bestCount} / ${N} 筆需求`);
+  showToast(`⚡ ${label}：${bestCount} / ${checkedKeys.length} 筆勾選需求可滿足`);
 }
 
 function showToast(msg) {
