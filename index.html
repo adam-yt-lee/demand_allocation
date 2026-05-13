@@ -21,12 +21,9 @@
     --accent-dim: #1e2d5a;
     --green: #2dd4a0;
     --green-dim: #0d3326;
-    --green-bg: #0a2a20;
     --red: #ff5c72;
     --red-dim: #3d0d17;
-    --red-bg: #2a0810;
     --yellow: #f5c842;
-    --yellow-dim: #3a2e05;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans TC', sans-serif;
   }
@@ -55,425 +52,133 @@
     flex-shrink: 0;
     gap: 12px;
   }
-
-  .logo {
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-  }
-
+  .logo { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); letter-spacing: .05em; white-space: nowrap; }
   .logo span { color: var(--text-dim); font-weight: 400; }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .header-right { display: flex; align-items: center; gap: 10px; }
   .file-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    transition: background 0.15s;
-    white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; background: var(--accent); color: #fff;
+    border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;
+    transition: background .15s; white-space: nowrap; border: none;
   }
   .file-label:hover { background: #3d6aee; }
   .file-label input { display: none; }
-
-  .file-status {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    white-space: nowrap;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  .btn-sec { background: var(--surface2); border: 1px solid var(--border2); color: var(--text-dim); }
+  .btn-sec:hover { background: var(--border); color: var(--text); }
+  .file-status { font-family: var(--mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
 
   /* ── ERROR BAR ── */
-  #error-bar {
-    display: none;
-    background: var(--red-dim);
-    border-bottom: 1px solid var(--red);
-    color: var(--red);
-    padding: 6px 20px;
-    font-size: 12px;
-    font-family: var(--mono);
-    flex-shrink: 0;
-  }
+  #error-bar { display: none; background: var(--red-dim); border-bottom: 1px solid var(--red); color: var(--red); padding: 6px 20px; font-size: 12px; font-family: var(--mono); flex-shrink: 0; }
 
   /* ── MAIN LAYOUT ── */
-  .main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
+  .main { display: flex; flex: 1; overflow: hidden; }
 
   /* ── LEFT PANEL ── */
-  .left-panel {
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    flex: 3;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .panel-header {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--text-dim);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-
+  .left-panel { flex: 3; display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow: hidden; }
+  .panel-header { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 11px; font-family: var(--mono); color: var(--text-dim); display: flex; align-items: center; justify-content: space-between; background: var(--surface); flex-shrink: 0; }
   .panel-header-label { color: var(--text); font-weight: 600; font-size: 12px; }
+  .card-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 3px; }
 
-  .card-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
+  /* ── MONTH GROUP ── */
+  .month-group { margin-bottom: 2px; }
+  .month-header { display: flex; align-items: center; gap: 6px; padding: 3px 8px; cursor: pointer; user-select: none; font-family: var(--mono); font-size: 10px; color: var(--text-dim); border-radius: 3px; transition: background .1s; }
+  .month-header:hover { background: var(--surface2); }
+  .month-header .mh-arrow { font-size: 9px; transition: transform .15s; }
+  .month-header.collapsed .mh-arrow { transform: rotate(-90deg); }
+  .month-header .mh-label { color: var(--accent); font-weight: 600; letter-spacing: .05em; }
+  .month-header .mh-count { color: var(--text-muted); }
+  .month-header .mh-ok { color: var(--green); }
+  .month-header .mh-short { color: var(--red); margin-left: 4px; }
+  .month-cards { display: flex; flex-direction: column; gap: 3px; padding: 0 0 4px 0; }
+  .month-cards.collapsed { display: none; }
 
   /* ── DEMAND CARD ── */
   .demand-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 4px 8px 4px 0;
-    cursor: grab;
     user-select: none;
-    transition: border-color 0.15s, opacity 0.15s;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0;
-    min-height: 50px;
+    transition: border-color .15s, opacity .15s;
     border-left: 3px solid var(--border2);
+    overflow: hidden;
   }
-
-  .demand-card:active { cursor: grabbing; }
   .demand-card.dragging { opacity: 0.4; }
   .demand-card.drag-over { border-color: var(--accent); background: var(--accent-dim); }
-
   .demand-card.calc-ok    { border-left-color: var(--green); }
   .demand-card.calc-short { border-left-color: var(--red); }
-  .demand-card.frozen { opacity: 0.45; }
+  .demand-card.calc-unresolved { border-left-color: var(--yellow); }
+  .demand-card.frozen { opacity: 0.5; }
 
-  .card-checkbox {
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    accent-color: var(--accent);
-    flex-shrink: 0;
-    margin: 0 6px 0 8px;
+  /* ── CARD HEADER ── */
+  .card-header {
+    display: flex; align-items: center; gap: 0;
+    padding: 5px 8px 5px 0; min-height: 50px;
+    cursor: grab;
   }
-
-  .card-priority {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    width: 20px;
-    flex-shrink: 0;
-    text-align: right;
-    margin-right: 6px;
-  }
-
-  .card-main {
-    flex: 1;
-    min-width: 0;
-    margin-right: 6px;
-    display: grid;
-    grid-template-rows: auto auto auto;
-    row-gap: 1px;
-  }
-
-  .card-name {
-    font-weight: 700;
-    font-size: 11px;
-    color: var(--text);
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-  }
-
-  .card-specs {
-    font-size: 9px;
-    color: var(--text-muted);
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-  }
-
-  .card-name::-webkit-scrollbar,
-  .card-specs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .card-status {
-    font-size: 10px;
-    font-family: var(--mono);
-    flex-shrink: 0;
-    text-align: right;
-    min-width: 52px;
-  }
-
+  .card-header:active { cursor: grabbing; }
+  .card-checkbox { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; margin: 0 4px 0 8px; }
+  .card-expand { font-size: 9px; color: var(--text-muted); width: 14px; flex-shrink: 0; text-align: center; transition: transform .15s; pointer-events: none; }
+  .demand-card.expanded .card-expand { transform: rotate(90deg); }
+  .card-priority { font-family: var(--mono); font-size: 10px; color: var(--text-muted); width: 20px; flex-shrink: 0; text-align: right; margin-right: 6px; }
+  .card-info { flex: 1; min-width: 0; margin-right: 6px; }
+  .card-name { font-weight: 700; font-size: 11px; color: var(--text); line-height: 1.2; }
+  .card-meta { font-size: 9px; color: var(--text-muted); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-month-row { display: flex; align-items: center; gap: 3px; font-size: 9px; font-family: var(--mono); white-space: nowrap; flex-shrink: 0; margin-right: 6px; }
+  .mth-label { color: var(--text-muted); }
+  .mth-select { background: var(--surface2); border: 1px solid var(--border2); color: var(--accent); font-family: var(--mono); font-size: 9px; padding: 0 2px; border-radius: 2px; cursor: pointer; outline: none; max-width: 62px; }
+  .mth-select:focus { border-color: var(--accent); }
+  .card-status { font-size: 10px; font-family: var(--mono); flex-shrink: 0; text-align: right; min-width: 50px; }
   .status-ok    { color: var(--green); }
   .status-short { color: var(--red); }
+  .status-unresolved { color: var(--yellow); }
   .status-frozen-txt { color: var(--text-muted); }
 
-  .shortage-tip {
-    font-size: 9px;
-    color: var(--red);
-    opacity: 0.8;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px;
-  }
+  /* ── CARD DETAIL (expandable) ── */
+  .card-detail { display: none; border-top: 1px solid var(--border); padding: 6px 8px; cursor: default; user-select: text; }
+  .demand-card.expanded .card-detail { display: block; }
 
-  /* ── MONTH ROW ── */
-  .card-month-row {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 9px;
-    font-family: var(--mono);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  .mth-label  { color: var(--text-muted); }
-  .mth-sep    { color: var(--text-muted); opacity: 0.4; margin: 0 1px; }
-  .mth-val    { color: var(--text-dim); }
-  .mth-select {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    color: var(--accent);
-    font-family: var(--mono);
-    font-size: 9px;
-    padding: 0 2px;
-    border-radius: 2px;
-    cursor: pointer;
-    outline: none;
-    max-width: 58px;
-  }
-  .mth-select:focus { border-color: var(--accent); }
-  .mth-earliest-ok   { color: var(--green); }
-  .mth-earliest-late { color: var(--yellow); }
-  .mth-earliest-none { color: var(--text-muted); }
-  .mth-snap {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--accent);
-    font-size: 8px;
-    cursor: pointer;
-    padding: 0 3px;
-    border-radius: 2px;
-    line-height: 1.5;
-    margin-left: 2px;
-    flex-shrink: 0;
-    transition: background 0.1s, border-color 0.1s;
-  }
-  .mth-snap:hover:not(:disabled) { background: var(--accent-dim); border-color: var(--accent); }
-  .mth-snap:disabled { color: var(--text-muted); border-color: var(--text-muted); cursor: default; opacity: 0.5; }
+  /* ── ITEMS TABLE ── */
+  .items-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
+  .items-table th { text-align: left; color: var(--text-dim); font-size: 10px; font-weight: 600; padding: 2px 6px 4px; border-bottom: 1px solid var(--border); letter-spacing: .04em; white-space: nowrap; }
+  .items-table th.r { text-align: right; }
+  .items-table td { padding: 3px 6px; border-bottom: 1px solid rgba(212,218,240,.06); color: var(--text); vertical-align: middle; }
+  .items-table tr:last-child td { border-bottom: none; }
+  .items-table td.r { text-align: right; font-family: var(--mono); }
+  .items-table td.group-cell { color: var(--text-dim); font-size: 10px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .name-select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 2px 4px; border-radius: 2px; cursor: pointer; outline: none; width: 100%; max-width: 220px; }
+  .name-select:focus { border-color: var(--accent); }
+  .name-select.unselected { color: var(--text-muted); border-color: var(--border2); font-style: italic; }
+  .gap-pos  { color: var(--green); }
+  .gap-neg  { color: var(--red); }
+  .gap-zero { color: var(--text-muted); }
 
   /* ── RIGHT PANEL ── */
-  .right-panel {
-    flex: 1;
-    min-width: 280px;
-    max-width: 380px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .right-top {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-
-  .summary-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 8px;
-    text-align: center;
-  }
-
-  .summary-num {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1;
-    margin-bottom: 2px;
-  }
-
-  .summary-label {
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
+  .right-panel { flex: 1; min-width: 280px; max-width: 400px; display: flex; flex-direction: column; overflow: hidden; }
+  .right-top { padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .summary-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; text-align: center; }
+  .summary-num { font-family: var(--mono); font-size: 18px; font-weight: 600; line-height: 1; margin-bottom: 2px; }
+  .summary-label { font-size: 10px; color: var(--text-dim); }
   .summary-card.ok .summary-num { color: var(--green); }
   .summary-card.short .summary-num { color: var(--red); }
   .summary-card.frozen-s .summary-num { color: var(--text-muted); }
   .summary-card.total .summary-num { color: var(--accent); }
-
-  /* ── STOCK TABLE ── */
-  .right-bottom {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .section-header {
-    padding: 8px 16px;
-    border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--text-dim);
-    background: var(--surface);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .table-wrap {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-
-  thead th {
-    position: sticky;
-    top: 0;
-    background: var(--surface2);
-    color: var(--text-dim);
-    font-weight: 600;
-    font-size: 10px;
-    padding: 4px 8px;
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    letter-spacing: 0.04em;
-  }
-
-  thead th:first-child { text-align: left; }
-
-  tbody td {
-    padding: 4px 8px;
-    text-align: right;
-    color: var(--text);
-    border-bottom: 1px solid rgba(212, 218, 240, 0.12);
-  }
-
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  tbody td:first-child {
-    text-align: left;
-    color: var(--text);
-    font-weight: 600;
-  }
-
+  .right-bottom { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .section-header { padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 11px; font-family: var(--mono); color: var(--text-dim); background: var(--surface); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+  .table-wrap { flex: 1; overflow-y: auto; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
+  thead th { position: sticky; top: 0; background: var(--surface2); color: var(--text-dim); font-weight: 600; font-size: 10px; padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; letter-spacing: .04em; }
+  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  tbody td { padding: 4px 8px; text-align: right; color: var(--text); border-bottom: 1px solid rgba(212,218,240,.1); font-size: 11px; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td:first-child { text-align: left; color: var(--text-dim); font-size: 10px; }
+  tbody td:nth-child(2) { text-align: left; color: var(--text); }
   .num-pos { color: var(--green); }
   .num-neg { color: var(--red); }
   .num-zero { color: var(--text-muted); }
 
   /* ── EMPTY STATE ── */
-  .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    color: var(--text-muted);
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-
-  /* ── MONTH GROUP ── */
-  .month-group { margin-bottom: 2px; }
-
-  .month-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 8px;
-    cursor: pointer;
-    user-select: none;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    border-radius: 3px;
-    transition: background 0.1s;
-  }
-  .month-header:hover { background: var(--surface2); }
-  .month-header .mh-arrow { font-size: 9px; transition: transform 0.15s; }
-  .month-header.collapsed .mh-arrow { transform: rotate(-90deg); }
-  .month-header .mh-label { color: var(--accent); font-weight: 600; letter-spacing: 0.05em; }
-  .month-header .mh-count { color: var(--text-muted); }
-  .month-header .mh-ok   { color: var(--green); }
-  .month-header .mh-short{ color: var(--red); margin-left: 4px; }
-
-  .month-cards { display: flex; flex-direction: column; gap: 3px; padding: 0 0 4px 0; }
-  .month-cards.collapsed { display: none; }
-
-  .month-drop-zone {
-    height: 4px;
-    border-radius: 2px;
-    transition: height 0.1s, background 0.1s;
-  }
-  .month-drop-zone.drag-over-zone {
-    height: 16px;
-    background: var(--accent-dim);
-    border: 1px dashed var(--accent);
-  }
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); font-family: var(--mono); font-size: 12px; }
 
   /* scrollbar */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -487,8 +192,8 @@
   <div class="logo">KIT<span>·</span>CHECK <span>// 齊套料管理</span></div>
   <div class="header-right">
     <div class="file-status" id="file-status">尚未載入檔案</div>
-    <button class="file-label" onclick="downloadTemplate()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text-dim)">↓ 下載範本</button>
-    <button class="file-label" id="dl-btn" onclick="downloadState()" style="display:none">↓ 下載狀態</button>
+    <button class="file-label btn-sec" onclick="downloadTemplate()">↓ 下載範本</button>
+    <button class="file-label btn-sec" id="dl-btn" style="display:none" onclick="downloadResult()">↓ 下載結果</button>
     <label class="file-label">
       ↑ 上傳 XLSX
       <input type="file" id="file-input" accept=".xlsx,.xls">
@@ -506,7 +211,7 @@
     </div>
     <div class="card-list" id="card-list">
       <div class="empty-state">
-        <div class="empty-icon">📂</div>
+        <div>📂</div>
         <div>上傳 XLSX 以載入需求</div>
       </div>
     </div>
@@ -537,16 +242,14 @@
       <div class="section-header"><span>供給剩餘</span> // 扣料後總表</div>
       <div class="table-wrap">
         <table id="stock-table">
-          <thead>
-            <tr>
-              <th>SPEC</th>
-              <th>可用庫存</th>
-              <th>可用進料</th>
-              <th>剩餘庫存</th>
-              <th>剩餘進料</th>
-              <th>可用合計</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th>Group</th>
+            <th>Name</th>
+            <th>庫存</th>
+            <th>進料</th>
+            <th>剩餘庫存</th>
+            <th>剩餘進料</th>
+          </tr></thead>
           <tbody id="stock-tbody"></tbody>
         </table>
       </div>
@@ -558,12 +261,28 @@
 // ─────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────
-let demandMap       = {};
-let supplyRows      = [];
-let cardOrder       = [];
-let cardChecked     = {};
+let demandMap      = {};  // { [key]: { month, items: [{ group, name, qty }] } }
+let supplyRows     = [];  // [{ group, name, qty, month }]
+let cardOrder      = [];
+let cardChecked    = {};
+let cardExpanded   = {};
 let collapsedMonths = {};
-let adoptedMonthMap = {}; // key -> adopted ship month override
+let adoptedMonthMap = {};
+let nameSelections  = {}; // { "DemandKey_idx": selectedName }
+
+function getEffectiveName(key, idx) {
+  const k = `${key}_${idx}`;
+  if (nameSelections.hasOwnProperty(k)) return nameSelections[k];
+  return demandMap[key].items[idx].name || '';
+}
+
+function getNamesForGroup(group) {
+  const seen = new Set(), result = [];
+  supplyRows.forEach(r => {
+    if (r.group === group && !seen.has(r.name)) { seen.add(r.name); result.push(r.name); }
+  });
+  return result;
+}
 
 function getAdoptedMonth(key) {
   return adoptedMonthMap[key] !== undefined ? adoptedMonthMap[key] : demandMap[key].month;
@@ -585,87 +304,69 @@ document.getElementById('file-input').addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
-      const wb = XLSX.read(ev.target.result, { type: 'array' });
-      parseWorkbook(wb, file.name);
+      parseWorkbook(XLSX.read(ev.target.result, { type: 'array' }), file.name);
     } catch(err) { showError('讀取 XLSX 失敗：' + err.message); }
   };
   reader.readAsArrayBuffer(file);
   e.target.value = '';
 });
 
-function parseWorkbook(wb, filename, stateOverride) {
+function parseWorkbook(wb, filename) {
   clearError();
-  const sheetNames = wb.SheetNames.map(s => s.toLowerCase());
+  const lcNames = wb.SheetNames.map(s => s.toLowerCase());
   const missing = [];
-  if (!sheetNames.includes('demand')) missing.push('Demand');
-  if (!sheetNames.includes('supply')) missing.push('Supply');
+  if (!lcNames.includes('demand')) missing.push('Demand');
+  if (!lcNames.includes('supply')) missing.push('Supply');
   if (missing.length) { showError(`缺少 Sheet：${missing.join('、')}`); return; }
 
-  const demandSheet = wb.Sheets[wb.SheetNames[sheetNames.indexOf('demand')]];
-  const supplySheet = wb.Sheets[wb.SheetNames[sheetNames.indexOf('supply')]];
-  const isBlankRow = obj => Object.values(obj).every(v => String(v).trim() === '');
-  const demandRows    = XLSX.utils.sheet_to_json(demandSheet, { defval: '' }).filter(r => !isBlankRow(r));
-  const supplyRowsRaw = XLSX.utils.sheet_to_json(supplySheet, { defval: '' }).filter(r => !isBlankRow(r));
+  const demandSheet = wb.Sheets[wb.SheetNames[lcNames.indexOf('demand')]];
+  const supplySheet = wb.Sheets[wb.SheetNames[lcNames.indexOf('supply')]];
+  const notBlank = obj => !Object.values(obj).every(v => String(v).trim() === '');
+  const dRaws = XLSX.utils.sheet_to_json(demandSheet, { defval: '' }).filter(notBlank);
+  const sRaws = XLSX.utils.sheet_to_json(supplySheet, { defval: '' }).filter(notBlank);
 
-  const dRequired = ['Demand','SPEC','Qty','Month'];
-  const sRequired = ['SPEC','Qty','Month'];
-
-  const normalize = (obj, fields) => {
-    const out = {}, keys = Object.keys(obj);
-    fields.forEach(f => {
-      const match = keys.find(k => k.trim().toLowerCase() === f.toLowerCase());
-      out[f] = match !== undefined ? String(obj[match]).trim() : '';
-    });
-    return out;
+  // Case-insensitive column picker
+  const pick = (obj, ...candidates) => {
+    const keys = Object.keys(obj);
+    for (const c of candidates) {
+      const found = keys.find(k => k.trim().toLowerCase() === c.toLowerCase());
+      if (found !== undefined) return String(obj[found]).trim();
+    }
+    return '';
   };
 
   const newDemandMap = {};
-  const demandErrors = [];
-  demandRows.forEach((row, i) => {
-    const r = normalize(row, dRequired);
-    const rowNum = i + 2;
-    if (!r.Demand || !r.SPEC) return;
-    const qty   = Number(r.Qty);
-    const month = Number(r.Month);
-    if (isNaN(qty) || isNaN(month)) return;
-  
-    const key = r.Demand;
-    if (!newDemandMap[key]) newDemandMap[key] = { month, specs: [] };
-    newDemandMap[key].specs.push({ spec: r.SPEC, qty });
+  dRaws.forEach(row => {
+    const demand = pick(row, 'Demand');
+    const group  = pick(row, 'Group', 'SPEC');
+    const name   = pick(row, 'Name');
+    const qty    = Number(pick(row, 'Qty'));
+    const month  = Number(pick(row, 'Month'));
+    if (!demand || !group || isNaN(qty) || isNaN(month)) return;
+    if (!newDemandMap[demand]) newDemandMap[demand] = { month, items: [] };
+    newDemandMap[demand].items.push({ group, name, qty });
   });
 
   const newSupplyRows = [];
-  supplyRowsRaw.forEach(row => {
-    const r = normalize(row, sRequired);
-    if (!r.SPEC) return;
-    const qty = Number(r.Qty);
-    if (isNaN(qty)) return;
-    const mRaw = String(r.Month).trim().toUpperCase();
-    let month = mRaw === 'STOCK' ? 'STOCK' : Number(r.Month);
-    newSupplyRows.push({ spec: r.SPEC, qty, month });
+  sRaws.forEach(row => {
+    const group = pick(row, 'Group', 'SPEC');
+    const name  = pick(row, 'Name');
+    const qty   = Number(pick(row, 'Qty'));
+    const mRaw  = pick(row, 'Month').toUpperCase();
+    if (!group || isNaN(qty)) return;
+    const month = (mRaw === 'STOCK' || mRaw === '') ? 'STOCK' : Number(pick(row, 'Month'));
+    newSupplyRows.push({ group, name, qty, month });
   });
 
-  demandMap  = newDemandMap;
-  supplyRows = newSupplyRows;
-  
-  if (stateOverride) {
-    cardOrder = stateOverride.cardOrder.filter(k => newDemandMap[k]);
-    const missingKeys = Object.keys(newDemandMap).filter(k => !cardOrder.includes(k));
-    cardOrder = [...cardOrder, ...missingKeys];
-    cardChecked = {};
-    cardOrder.forEach(k => { cardChecked[k] = stateOverride.cardChecked?.[k] ?? false; });
-    collapsedMonths = stateOverride.collapsedMonths || {};
-    adoptedMonthMap = {};
-    if (stateOverride.adoptedMonthMap) {
-      Object.keys(stateOverride.adoptedMonthMap).forEach(k => {
-        if (newDemandMap[k]) adoptedMonthMap[k] = stateOverride.adoptedMonthMap[k];
-      });
-    }
-  } else {
-    cardOrder = Object.keys(newDemandMap).sort((a, b) => demandMap[a].month - demandMap[b].month);
-    cardOrder.forEach(k => { cardChecked[k] = false; });
-    adoptedMonthMap = {};
-  }
+  demandMap       = newDemandMap;
+  supplyRows      = newSupplyRows;
+  nameSelections  = {};
+  cardOrder       = Object.keys(newDemandMap).sort((a, b) => newDemandMap[a].month - newDemandMap[b].month);
+  cardChecked     = {};
+  cardExpanded    = {};
+  collapsedMonths = {};
+  adoptedMonthMap = {};
+  cardOrder.forEach(k => { cardChecked[k] = false; cardExpanded[k] = false; });
 
   document.getElementById('file-status').textContent = filename;
   document.getElementById('dl-btn').style.display = '';
@@ -676,130 +377,121 @@ function parseWorkbook(wb, filename, stateOverride) {
 // CALCULATION ENGINE
 // ─────────────────────────────────────────────
 function calculate() {
-  const stockPool = {};
+  // Build supply pools keyed by name
+  const stockPool   = {};
   const incomingPool = [];
   supplyRows.forEach(r => {
-    if (r.month === 'STOCK') { stockPool[r.spec] = (stockPool[r.spec] || 0) + r.qty; }
-    else { incomingPool.push({ spec: r.spec, qty: r.qty, month: r.month, remaining: r.qty }); }
+    if (r.month === 'STOCK') {
+      stockPool[r.name] = (stockPool[r.name] || 0) + r.qty;
+    } else {
+      incomingPool.push({ group: r.group, name: r.name, qty: r.qty, month: r.month, remaining: r.qty });
+    }
   });
   incomingPool.sort((a, b) => a.month - b.month);
 
-  const deductedStock = {}, deductedIncoming = {}, results = {}, earliestMonths = {};
-
-  // Unique incoming months sorted ascending, used for earliest-month search
-  const allIncomingMonths = [...new Set(incomingPool.map(r => r.month))].sort((a, b) => a - b);
-
-  // Find earliest month where specs can be satisfied given current pool state.
-  // Returns 0  → stock alone is sufficient (any month works)
-  // Returns N  → earliest incoming month that covers the gap
-  // Returns null → never satisfiable with current pool
-  const findEarliestMonth = (specs) => {
-    if (specs.every(({ spec, qty }) => (stockPool[spec] || 0) >= qty)) return 0;
-    for (const m of allIncomingMonths) {
-      if (specs.every(({ spec, qty }) => {
-        const sAvail = stockPool[spec] || 0;
-        const iAvail = incomingPool
-          .filter(r => r.spec === spec && r.month <= m)
-          .reduce((s, r) => s + r.remaining, 0);
-        return sAvail + iAvail >= qty;
-      })) return m;
-    }
-    return null;
-  };
-
-  const peekShortages = (key) => {
-    const month = getAdoptedMonth(key);
-    const { specs } = demandMap[key];
-    const sh = [];
-    for (const { spec, qty } of specs) {
-      const sAvail = stockPool[spec] || 0;
-      const iAvail = incomingPool
-        .filter(r => r.spec === spec && r.month <= month)
-        .reduce((s, r) => s + r.remaining, 0);
-      if (sAvail + iAvail < qty) sh.push({ spec, lack: qty - sAvail - iAvail });
-    }
-    return sh;
-  };
+  const results = {};
 
   for (const key of cardOrder) {
-    const demand = demandMap[key];
+    const demand       = demandMap[key];
     const adoptedMonth = getAdoptedMonth(key);
 
-    // Compute earliest fulfillable month from current pool state (before deducting this demand)
-    earliestMonths[key] = findEarliestMonth(demand.specs);
-
-    if (!cardChecked[key]) {
-      const fSh = peekShortages(key);
-      results[key] = { status: 'frozen', calcStatus: fSh.length === 0 ? 'ok' : 'shortage', shortages: fSh };
-      continue;
-    }
-
-    const { specs } = demand;
-    const shortages = [];
-    for (const { spec, qty } of specs) {
-      const sA = stockPool[spec] || 0;
-      const iA = incomingPool
-        .filter(r => r.spec === spec && r.month <= adoptedMonth)
+    // Per-item availability using current pool state (before this demand deducts)
+    const itemResults = demand.items.map((item, idx) => {
+      const effectiveName = getEffectiveName(key, idx);
+      if (!effectiveName) {
+        return { group: item.group, origName: item.name, effectiveName: '', qty: item.qty,
+                 available: null, gap: null, itemStatus: 'unresolved' };
+      }
+      const sAvail = stockPool[effectiveName] || 0;
+      const iAvail = incomingPool
+        .filter(r => r.name === effectiveName && r.month <= adoptedMonth)
         .reduce((s, r) => s + r.remaining, 0);
-      if (sA + iA < qty) shortages.push({ spec, lack: qty - sA - iA });
-    }
+      const available = sAvail + iAvail;
+      const gap = available - item.qty;
+      return { group: item.group, origName: item.name, effectiveName, qty: item.qty,
+               available, gap, itemStatus: gap >= 0 ? 'ok' : 'short' };
+    });
 
-    if (shortages.length === 0) {
-      for (const { spec, qty } of specs) {
-        let toDeduct = qty;
-        const fromStock = Math.min(toDeduct, stockPool[spec] || 0);
-        stockPool[spec] -= fromStock;
-        deductedStock[spec] = (deductedStock[spec] || 0) + fromStock;
+    const hasUnresolved = itemResults.some(i => i.itemStatus === 'unresolved');
+    const hasShort      = itemResults.some(i => i.itemStatus === 'short');
+    const calcStatus    = hasUnresolved ? 'unresolved' : hasShort ? 'shortage' : 'ok';
+    const deductStatus  = cardChecked[key] ? (calcStatus === 'ok' ? 'ok' : 'shortage') : 'frozen';
+
+    results[key] = { status: deductStatus, calcStatus, items: itemResults };
+
+    // Deduct supply only when checked AND fully satisfiable
+    if (cardChecked[key] && calcStatus === 'ok') {
+      for (const item of itemResults) {
+        let toDeduct = item.qty;
+        const fromStock = Math.min(toDeduct, stockPool[item.effectiveName] || 0);
+        stockPool[item.effectiveName] = (stockPool[item.effectiveName] || 0) - fromStock;
         toDeduct -= fromStock;
         if (toDeduct > 0) {
-          for (const row of incomingPool) {
-            if (row.spec !== spec || row.month > adoptedMonth) continue;
-            const fromInc = Math.min(toDeduct, row.remaining);
-            row.remaining -= fromInc;
-            deductedIncoming[spec] = (deductedIncoming[spec] || 0) + fromInc;
-            toDeduct -= fromInc;
+          for (const r of incomingPool) {
+            if (r.name !== item.effectiveName || r.month > adoptedMonth) continue;
+            const take = Math.min(toDeduct, r.remaining);
+            r.remaining -= take;
+            toDeduct    -= take;
             if (toDeduct <= 0) break;
           }
         }
       }
-      results[key] = { status: 'ok', calcStatus: 'ok', shortages: [] };
-    } else {
-      results[key] = { status: 'shortage', calcStatus: 'shortage', shortages };
     }
   }
-  return { results, stockPool, incomingPool, deductedStock, deductedIncoming, earliestMonths };
+
+  return { results, stockPool, incomingPool };
 }
 
 // ─────────────────────────────────────────────
 // RENDER
 // ─────────────────────────────────────────────
 function renderAll() {
-  const { results, stockPool, incomingPool, deductedStock, deductedIncoming, earliestMonths } = calculate();
-  renderCards(results, earliestMonths);
+  const { results, stockPool, incomingPool } = calculate();
+  renderCards(results);
   renderSummary(results);
-  renderStockTable(stockPool, incomingPool, deductedStock, deductedIncoming);
+  renderStockTable(stockPool, incomingPool);
 }
 
-function renderCards(results, earliestMonths) {
+// Event delegation for dropdowns inside cards
+document.getElementById('card-list').addEventListener('change', e => {
+  if (e.target.classList.contains('name-select')) {
+    e.stopPropagation();
+    nameSelections[`${e.target.dataset.key}_${e.target.dataset.idx}`] = e.target.value;
+    renderAll();
+  } else if (e.target.classList.contains('mth-select')) {
+    e.stopPropagation();
+    adoptedMonthMap[e.target.dataset.key] = Number(e.target.value);
+    renderAll();
+  }
+});
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderCards(results) {
   const list = document.getElementById('card-list');
   list.innerHTML = '';
-  const monthGroups = [];
-  const monthIndex = {};
 
+  if (!cardOrder.length) {
+    list.innerHTML = '<div class="empty-state"><div>📂</div><div>上傳 XLSX 以載入需求</div></div>';
+    document.getElementById('card-count').textContent = '— 筆';
+    return;
+  }
+
+  // Group by month
+  const monthGroups = [], monthIndex = {};
   cardOrder.forEach(key => {
     const m = demandMap[key].month;
-    if (monthIndex[m] === undefined) {
-      monthIndex[m] = monthGroups.length;
-      monthGroups.push({ month: m, keys: [] });
-    }
+    if (monthIndex[m] === undefined) { monthIndex[m] = monthGroups.length; monthGroups.push({ month: m, keys: [] }); }
     monthGroups[monthIndex[m]].keys.push(key);
   });
 
-  monthGroups.forEach(group => {
-    const { month, keys } = group;
+  monthGroups.forEach(({ month, keys }) => {
     const isCollapsed = !!collapsedMonths[month];
-    const okCount = keys.filter(k => results[k].calcStatus === 'ok').length;
-    const shortCount = keys.filter(k => results[k].calcStatus === 'shortage').length;
+    const okCount    = keys.filter(k => results[k].calcStatus === 'ok').length;
+    const shortCount = keys.filter(k => results[k].calcStatus !== 'ok').length;
 
     const groupDiv = document.createElement('div');
     groupDiv.className = 'month-group';
@@ -810,100 +502,85 @@ function renderCards(results, earliestMonths) {
       <span class="mh-arrow">▾</span>
       <span class="mh-label">${month}</span>
       <span class="mh-count">${keys.length}筆</span>
-      ${okCount > 0 ? `<span class="mh-ok">✓${okCount}</span>` : ''}
+      ${okCount    > 0 ? `<span class="mh-ok">✓${okCount}</span>` : ''}
       ${shortCount > 0 ? `<span class="mh-short">✗${shortCount}</span>` : ''}
     `;
-    hdr.onclick = () => {
-      collapsedMonths[month] = !collapsedMonths[month];
-      renderAll();
-    };
+    hdr.onclick = () => { collapsedMonths[month] = !collapsedMonths[month]; renderAll(); };
 
     const cardsDiv = document.createElement('div');
     cardsDiv.className = 'month-cards' + (isCollapsed ? ' collapsed' : '');
 
     keys.forEach(key => {
-      const result   = results[key];
-      const checked  = cardChecked[key];
-      const earliest = earliestMonths[key];
-      const targetMonth  = demandMap[key].month;
-      const adoptedMonth = getAdoptedMonth(key);
+      const result  = results[key];
+      const checked = cardChecked[key];
+      const expanded = cardExpanded[key];
 
+      const calcClass = `calc-${result.calcStatus === 'ok' ? 'ok' : result.calcStatus === 'unresolved' ? 'unresolved' : 'short'}`;
       const card = document.createElement('div');
-      card.className = `demand-card ${result.calcStatus === 'ok' ? 'calc-ok' : 'calc-short'} ${!checked ? 'frozen' : ''}`;
+      card.className = `demand-card ${calcClass}${!checked ? ' frozen' : ''}${expanded ? ' expanded' : ''}`;
 
-      // Status column
-      let statusHtml = '';
-      if (!checked) statusHtml = `<div class="card-status status-frozen-txt">—</div>`;
-      else if (result.status === 'ok') statusHtml = `<div class="card-status status-ok">OK</div>`;
-      else {
-        const tip = result.shortages.map(s => `${s.spec} 缺${s.lack}`).join('; ');
-        statusHtml = `<div class="card-status status-short">缺料<span class="shortage-tip">${tip}</span></div>`;
-      }
+      // Adopted month dropdown
+      const optMths = getMonthOptions(key);
+      const adopted = getAdoptedMonth(key);
+      if (!optMths.includes(adopted)) optMths.push(adopted);
+      optMths.sort((a, b) => a - b);
+      const mthOpts = optMths.map(m => `<option value="${m}"${m===adopted?' selected':''}>${m}</option>`).join('');
 
-      // Earliest fulfillable month display
-      let earliestClass, earliestDisplay;
-      if (earliest === 0) {
-        earliestClass   = 'mth-earliest-ok';
-        earliestDisplay = '庫存足';
-      } else if (earliest === null) {
-        earliestClass   = 'mth-earliest-none';
-        earliestDisplay = '—';
-      } else if (earliest <= adoptedMonth) {
-        earliestClass   = 'mth-earliest-ok';
-        earliestDisplay = String(earliest);
+      // Status badge
+      let statusHtml;
+      if (!checked) {
+        statusHtml = `<div class="card-status status-frozen-txt">—</div>`;
+      } else if (result.status === 'ok') {
+        statusHtml = `<div class="card-status status-ok">OK</div>`;
+      } else if (result.calcStatus === 'unresolved') {
+        statusHtml = `<div class="card-status status-unresolved">未完成</div>`;
       } else {
-        earliestClass   = 'mth-earliest-late';
-        earliestDisplay = String(earliest);
+        statusHtml = `<div class="card-status status-short">缺料</div>`;
       }
 
-      // Snap button: enabled only when earliest is a concrete month different from adopted
-      const snapEnabled = (typeof earliest === 'number') && earliest > 0 && earliest !== adoptedMonth;
+      const unresCount = result.items.filter(i => i.itemStatus === 'unresolved').length;
+      const metaText = `${demandMap[key].items.length}項` +
+        (unresCount > 0 ? ` · ${unresCount} 項未選 Name` : '');
 
-      // Dropdown options: all months >= target from supply data, ensuring adopted month is included
-      const optionMonths = getMonthOptions(key);
-      if (!optionMonths.includes(adoptedMonth)) optionMonths.push(adoptedMonth);
-      optionMonths.sort((a, b) => a - b);
-      const optionsHtml = optionMonths
-        .map(m => `<option value="${m}" ${m === adoptedMonth ? 'selected' : ''}>${m}</option>`)
-        .join('');
-
-      const specs = demandMap[key].specs.map(s => `${s.spec}×${s.qty}`).join(' ');
       card.innerHTML = `
-        <input type="checkbox" class="card-checkbox" ${checked ? 'checked' : ''}>
-        <div class="card-priority">#${cardOrder.indexOf(key) + 1}</div>
-        <div class="card-main">
-          <div class="card-name">${key}</div>
-          <div class="card-specs">${specs}</div>
-          <div class="card-month-row">
-            <span class="mth-label">目標</span><span class="mth-val">${targetMonth}</span>
-            <span class="mth-sep">/</span>
-            <span class="mth-label">採用</span><select class="mth-select">${optionsHtml}</select>
-            <span class="mth-sep">/</span>
-            <span class="mth-label">最早</span><span class="${earliestClass}">${earliestDisplay}</span>
-            <button class="mth-snap" ${snapEnabled ? '' : 'disabled'} title="採用最早可滿足月">↙最早</button>
+        <div class="card-header">
+          <input type="checkbox" class="card-checkbox"${checked?' checked':''} data-key="${esc(key)}">
+          <div class="card-expand">▶</div>
+          <div class="card-priority">#${cardOrder.indexOf(key)+1}</div>
+          <div class="card-info">
+            <div class="card-name">${esc(key)}</div>
+            <div class="card-meta">${metaText}</div>
           </div>
+          <div class="card-month-row">
+            <span class="mth-label">採用</span>
+            <select class="mth-select" data-key="${esc(key)}">${mthOpts}</select>
+          </div>
+          ${statusHtml}
         </div>
-        ${statusHtml}
+        <div class="card-detail">
+          ${buildDetailTable(key, result.items)}
+        </div>
       `;
 
-      card.querySelector('.card-checkbox').onchange = e => {
+      // Checkbox handler
+      card.querySelector('.card-checkbox').addEventListener('change', e => {
+        e.stopPropagation();
         cardChecked[key] = e.target.checked;
         renderAll();
-      };
-      card.querySelector('.mth-select').onchange = e => {
-        e.stopPropagation();
-        adoptedMonthMap[key] = Number(e.target.value);
-        renderAll();
-      };
-      // Prevent drag starting when clicking inside the month row
-      card.querySelector('.card-month-row').addEventListener('mousedown', e => e.stopPropagation());
-      if (snapEnabled) {
-        card.querySelector('.mth-snap').onclick = e => {
-          e.stopPropagation();
-          adoptedMonthMap[key] = earliest;
-          renderAll();
-        };
-      }
+      });
+
+      // Expand/collapse on header click (skip checkbox & month select)
+      card.querySelector('.card-header').addEventListener('click', e => {
+        if (e.target.closest('.card-checkbox') || e.target.closest('.mth-select')) return;
+        cardExpanded[key] = !cardExpanded[key];
+        card.classList.toggle('expanded', cardExpanded[key]);
+      });
+
+      // Prevent drag from starting when interacting with controls or detail
+      card.querySelector('.card-detail').addEventListener('mousedown', e => e.stopPropagation());
+      card.querySelector('.card-header').addEventListener('mousedown', e => {
+        if (e.target.closest('.card-checkbox') || e.target.closest('.mth-select')) e.stopPropagation();
+      });
 
       setupDrag(card, key);
       cardsDiv.appendChild(card);
@@ -913,7 +590,50 @@ function renderCards(results, earliestMonths) {
     groupDiv.appendChild(cardsDiv);
     list.appendChild(groupDiv);
   });
+
   document.getElementById('card-count').textContent = `${cardOrder.length} 筆`;
+}
+
+function buildDetailTable(key, items) {
+  const rows = items.map((item, idx) => {
+    const names = getNamesForGroup(item.group);
+    const effectiveName = getEffectiveName(key, idx);
+    const isUnselected  = !effectiveName;
+
+    const options = ['', ...names].map(n =>
+      `<option value="${esc(n)}"${n===effectiveName?' selected':''}>${n ? esc(n) : '-- 未選擇 --'}</option>`
+    ).join('');
+
+    let availTd, gapTd;
+    if (item.available === null) {
+      availTd = `<td class="r gap-zero">—</td>`;
+      gapTd   = `<td class="r gap-zero">—</td>`;
+    } else {
+      availTd = `<td class="r">${fmt(item.available)}</td>`;
+      const gapClass = item.gap > 0 ? 'gap-pos' : item.gap < 0 ? 'gap-neg' : 'gap-zero';
+      const gapStr   = item.gap >= 0 ? `+${fmt(item.gap)}` : fmt(item.gap);
+      gapTd = `<td class="r ${gapClass}">${gapStr}</td>`;
+    }
+
+    return `<tr>
+      <td class="group-cell" title="${esc(item.group)}">${esc(item.group)}</td>
+      <td><select class="name-select${isUnselected?' unselected':''}" data-key="${esc(key)}" data-idx="${idx}" onmousedown="event.stopPropagation()">${options}</select></td>
+      <td class="r">${fmt(item.qty)}</td>
+      ${availTd}
+      ${gapTd}
+    </tr>`;
+  }).join('');
+
+  return `<table class="items-table">
+    <thead><tr>
+      <th>Group</th>
+      <th>Name</th>
+      <th class="r">需求</th>
+      <th class="r">可用</th>
+      <th class="r">缺口</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 function renderSummary(results) {
@@ -923,52 +643,96 @@ function renderSummary(results) {
     else if (r.status === 'shortage') short++;
     else frozen++;
   });
-  document.getElementById('s-ok').textContent = ok;
+  document.getElementById('s-ok').textContent    = ok;
   document.getElementById('s-short').textContent = short;
   document.getElementById('s-frozen').textContent = frozen;
-  document.getElementById('s-total').textContent = cardOrder.length;
+  document.getElementById('s-total').textContent  = cardOrder.length;
 }
 
-function renderStockTable(stockPool, incomingPool, deductedStock, deductedIncoming) {
+function renderStockTable(stockPool, incomingPool) {
   const tbody = document.getElementById('stock-tbody');
   tbody.innerHTML = '';
-  const specs = [...new Set(supplyRows.map(r => r.spec))];
-  specs.forEach(spec => {
+  const seen = new Set();
+  supplyRows.forEach(r => {
+    if (seen.has(r.name)) return;
+    seen.add(r.name);
+    const sOrig = supplyRows.filter(s => s.name === r.name && s.month === 'STOCK').reduce((a, s) => a + s.qty, 0);
+    const iOrig = supplyRows.filter(s => s.name === r.name && s.month !== 'STOCK').reduce((a, s) => a + s.qty, 0);
+    const sRem  = stockPool[r.name] || 0;
+    const iRem  = incomingPool.filter(s => s.name === r.name).reduce((a, s) => a + s.remaining, 0);
     const tr = document.createElement('tr');
-    const sRem = stockPool[spec] || 0;
-    const iRem = incomingPool.filter(r => r.spec === spec).reduce((s,r) => s + r.remaining, 0);
     tr.innerHTML = `
-      <td>${spec}</td>
-      <td>${(deductedStock[spec]||0)+sRem}</td>
-      <td>${(deductedIncoming[spec]||0)+iRem}</td>
+      <td>${esc(r.group)}</td>
+      <td>${esc(r.name)}</td>
+      <td>${fmt(sOrig)}</td>
+      <td>${fmt(iOrig)}</td>
       <td class="${numClass(sRem)}">${fmt(sRem)}</td>
       <td class="${numClass(iRem)}">${fmt(iRem)}</td>
-      <td class="${numClass(sRem+iRem)}">${fmt(sRem+iRem)}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-function downloadState() {
+// ─────────────────────────────────────────────
+// DOWNLOAD — preserves original upload format
+// ─────────────────────────────────────────────
+function downloadResult() {
   const wb = XLSX.utils.book_new();
-  const data = [['Priority','Demand','目標月','採用月','Checked','Status','Shortage Detail']];
-  const { results } = calculate();
-  cardOrder.forEach((k, i) => {
-    const r = results[k];
-    const detail = r.shortages.map(s => `${s.spec} 缺${fmt(s.lack)}`).join('; ');
-    data.push([i + 1, k, demandMap[k].month, getAdoptedMonth(k), cardChecked[k] ? '✓' : '—', r.status, detail]);
+
+  // Demand sheet with effective names filled in
+  const demandData = [['Demand', 'Group', 'Name', 'Qty', 'Month']];
+  cardOrder.forEach(key => {
+    const { month, items } = demandMap[key];
+    items.forEach((item, idx) => {
+      demandData.push([key, item.group, getEffectiveName(key, idx), item.qty, month]);
+    });
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Result');
-  XLSX.writeFile(wb, 'kit-check-state.xlsx');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(demandData), 'Demand');
+
+  // Supply sheet — unchanged
+  const supplyData = [['Group', 'Name', 'Qty', 'Month']];
+  supplyRows.forEach(r => {
+    supplyData.push([r.group, r.name, r.qty, r.month === 'STOCK' ? 'Stock' : r.month]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(supplyData), 'Supply');
+
+  XLSX.writeFile(wb, 'kit-check-result.xlsx');
 }
 
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['Demand', 'Group', 'Name', 'Qty', 'Month'],
+    ['Demand1', 'DIMM 64G', '', 800, 202605],
+    ['Demand1', 'AMD/9224', '', 100, 202605],
+    ['Demand2', 'DIMM 128G', 'SAMSUNG/DDR5 128G/6400', 1200, 202606],
+  ]), 'Demand');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['Group', 'Name', 'Qty', 'Month'],
+    ['DIMM 64G', 'SAMSUNG/DDR5 64G/6400', 5000, 'Stock'],
+    ['AMD/9224', 'AMD/9224', 200, 'Stock'],
+    ['DIMM 128G', 'SAMSUNG/DDR5 128G/6400', 3000, 202606],
+  ]), 'Supply');
+  XLSX.writeFile(wb, 'kit-check-template.xlsx');
+}
+
+// ─────────────────────────────────────────────
+// DRAG & DROP
+// ─────────────────────────────────────────────
 let dragSrcKey = null;
+
 function setupDrag(card, key) {
   card.draggable = true;
-  card.ondragstart = e => { dragSrcKey = key; card.classList.add('dragging'); };
-  card.ondragend = () => card.classList.remove('dragging');
-  card.ondragover = e => e.preventDefault();
-  card.ondrop = e => {
+  card.ondragstart = e => {
+    if (e.target.closest('.card-detail') || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') {
+      e.preventDefault(); return;
+    }
+    dragSrcKey = key;
+    card.classList.add('dragging');
+  };
+  card.ondragend   = () => card.classList.remove('dragging');
+  card.ondragover  = e => e.preventDefault();
+  card.ondrop      = e => {
     e.preventDefault();
     if (dragSrcKey && dragSrcKey !== key) {
       const from = cardOrder.indexOf(dragSrcKey), to = cardOrder.indexOf(key);
@@ -979,17 +743,13 @@ function setupDrag(card, key) {
   };
 }
 
-function downloadTemplate() {
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Demand','Material','Qty','Note']]), 'Demand');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Group','Material','Qty','Status']]), 'Material');
-  XLSX.writeFile(wb, 'kit-check-template.xlsx');
-}
-
-function fmt(n) { return Number(n).toLocaleString(); }
-function numClass(n) { return n > 0 ? 'num-pos' : n < 0 ? 'num-neg' : 'num-zero'; }
-function showError(msg) { const b = document.getElementById('error-bar'); b.textContent = msg; b.style.display = 'block'; }
-function clearError() { document.getElementById('error-bar').style.display = 'none'; }
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function fmt(n)        { return Number(n).toLocaleString(); }
+function numClass(n)   { return n > 0 ? 'num-pos' : n < 0 ? 'num-neg' : 'num-zero'; }
+function showError(msg){ const b = document.getElementById('error-bar'); b.textContent = msg; b.style.display = 'block'; }
+function clearError()  { document.getElementById('error-bar').style.display = 'none'; }
 </script>
 </body>
 </html>
