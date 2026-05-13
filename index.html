@@ -161,7 +161,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 3px 8px 3px 0;
+    padding: 4px 8px 4px 0;
     cursor: grab;
     user-select: none;
     transition: border-color 0.15s, opacity 0.15s;
@@ -169,7 +169,7 @@
     display: flex;
     align-items: center;
     gap: 0;
-    min-height: 32px;
+    min-height: 50px;
     border-left: 3px solid var(--border2);
   }
 
@@ -205,7 +205,7 @@
     min-width: 0;
     margin-right: 6px;
     display: grid;
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: auto auto auto;
     row-gap: 1px;
   }
 
@@ -257,6 +257,52 @@
     text-overflow: ellipsis;
     max-width: 100px;
   }
+
+  /* ── MONTH ROW ── */
+  .card-month-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    font-family: var(--mono);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .mth-label  { color: var(--text-muted); }
+  .mth-sep    { color: var(--text-muted); opacity: 0.4; margin: 0 1px; }
+  .mth-val    { color: var(--text-dim); }
+  .mth-select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 0 2px;
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+    max-width: 58px;
+  }
+  .mth-select:focus { border-color: var(--accent); }
+  .mth-earliest-ok   { color: var(--green); }
+  .mth-earliest-late { color: var(--yellow); }
+  .mth-earliest-none { color: var(--text-muted); }
+  .mth-snap {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-size: 8px;
+    cursor: pointer;
+    padding: 0 3px;
+    border-radius: 2px;
+    line-height: 1.5;
+    margin-left: 2px;
+    flex-shrink: 0;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .mth-snap:hover:not(:disabled) { background: var(--accent-dim); border-color: var(--accent); }
+  .mth-snap:disabled { color: var(--text-muted); border-color: var(--text-muted); cursor: default; opacity: 0.5; }
 
   /* ── RIGHT PANEL ── */
   .right-panel {
@@ -512,11 +558,23 @@
 // ─────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────
-let demandMap   = {};
-let supplyRows  = [];
-let cardOrder   = [];
-let cardChecked = {};
+let demandMap       = {};
+let supplyRows      = [];
+let cardOrder       = [];
+let cardChecked     = {};
 let collapsedMonths = {};
+let adoptedMonthMap = {}; // key -> adopted ship month override
+
+function getAdoptedMonth(key) {
+  return adoptedMonthMap[key] !== undefined ? adoptedMonthMap[key] : demandMap[key].month;
+}
+
+function getMonthOptions(key) {
+  const target = demandMap[key].month;
+  const months = new Set([target]);
+  supplyRows.forEach(r => { if (r.month !== 'STOCK') months.add(r.month); });
+  return [...months].filter(m => m >= target).sort((a, b) => a - b);
+}
 
 // ─────────────────────────────────────────────
 // FILE UPLOAD
@@ -597,9 +655,16 @@ function parseWorkbook(wb, filename, stateOverride) {
     cardChecked = {};
     cardOrder.forEach(k => { cardChecked[k] = stateOverride.cardChecked?.[k] ?? false; });
     collapsedMonths = stateOverride.collapsedMonths || {};
+    adoptedMonthMap = {};
+    if (stateOverride.adoptedMonthMap) {
+      Object.keys(stateOverride.adoptedMonthMap).forEach(k => {
+        if (newDemandMap[k]) adoptedMonthMap[k] = stateOverride.adoptedMonthMap[k];
+      });
+    }
   } else {
-    cardOrder = Object.keys(newDemandMap).sort((a,b) => demandMap[a].month - demandMap[b].month);
-    cardOrder.forEach(k => cardChecked[k] = false);
+    cardOrder = Object.keys(newDemandMap).sort((a, b) => demandMap[a].month - demandMap[b].month);
+    cardOrder.forEach(k => { cardChecked[k] = false; });
+    adoptedMonthMap = {};
   }
 
   document.getElementById('file-status').textContent = filename;
@@ -617,16 +682,40 @@ function calculate() {
     if (r.month === 'STOCK') { stockPool[r.spec] = (stockPool[r.spec] || 0) + r.qty; }
     else { incomingPool.push({ spec: r.spec, qty: r.qty, month: r.month, remaining: r.qty }); }
   });
-  incomingPool.sort((a,b) => a.month - b.month);
+  incomingPool.sort((a, b) => a.month - b.month);
 
-  const deductedStock = {}, deductedIncoming = {}, results = {};
+  const deductedStock = {}, deductedIncoming = {}, results = {}, earliestMonths = {};
+
+  // Unique incoming months sorted ascending, used for earliest-month search
+  const allIncomingMonths = [...new Set(incomingPool.map(r => r.month))].sort((a, b) => a - b);
+
+  // Find earliest month where specs can be satisfied given current pool state.
+  // Returns 0  → stock alone is sufficient (any month works)
+  // Returns N  → earliest incoming month that covers the gap
+  // Returns null → never satisfiable with current pool
+  const findEarliestMonth = (specs) => {
+    if (specs.every(({ spec, qty }) => (stockPool[spec] || 0) >= qty)) return 0;
+    for (const m of allIncomingMonths) {
+      if (specs.every(({ spec, qty }) => {
+        const sAvail = stockPool[spec] || 0;
+        const iAvail = incomingPool
+          .filter(r => r.spec === spec && r.month <= m)
+          .reduce((s, r) => s + r.remaining, 0);
+        return sAvail + iAvail >= qty;
+      })) return m;
+    }
+    return null;
+  };
 
   const peekShortages = (key) => {
-    const { month, specs } = demandMap[key];
+    const month = getAdoptedMonth(key);
+    const { specs } = demandMap[key];
     const sh = [];
     for (const { spec, qty } of specs) {
       const sAvail = stockPool[spec] || 0;
-      const iAvail = incomingPool.filter(r => r.spec === spec && r.month <= month).reduce((s,r) => s + r.remaining, 0);
+      const iAvail = incomingPool
+        .filter(r => r.spec === spec && r.month <= month)
+        .reduce((s, r) => s + r.remaining, 0);
       if (sAvail + iAvail < qty) sh.push({ spec, lack: qty - sAvail - iAvail });
     }
     return sh;
@@ -634,17 +723,24 @@ function calculate() {
 
   for (const key of cardOrder) {
     const demand = demandMap[key];
+    const adoptedMonth = getAdoptedMonth(key);
+
+    // Compute earliest fulfillable month from current pool state (before deducting this demand)
+    earliestMonths[key] = findEarliestMonth(demand.specs);
+
     if (!cardChecked[key]) {
       const fSh = peekShortages(key);
       results[key] = { status: 'frozen', calcStatus: fSh.length === 0 ? 'ok' : 'shortage', shortages: fSh };
       continue;
     }
 
-    const { month, specs } = demand;
+    const { specs } = demand;
     const shortages = [];
     for (const { spec, qty } of specs) {
       const sA = stockPool[spec] || 0;
-      const iA = incomingPool.filter(r => r.spec === spec && r.month <= month).reduce((s,r) => s + r.remaining, 0);
+      const iA = incomingPool
+        .filter(r => r.spec === spec && r.month <= adoptedMonth)
+        .reduce((s, r) => s + r.remaining, 0);
       if (sA + iA < qty) shortages.push({ spec, lack: qty - sA - iA });
     }
 
@@ -657,7 +753,7 @@ function calculate() {
         toDeduct -= fromStock;
         if (toDeduct > 0) {
           for (const row of incomingPool) {
-            if (row.spec !== spec || row.month > month) continue;
+            if (row.spec !== spec || row.month > adoptedMonth) continue;
             const fromInc = Math.min(toDeduct, row.remaining);
             row.remaining -= fromInc;
             deductedIncoming[spec] = (deductedIncoming[spec] || 0) + fromInc;
@@ -671,20 +767,20 @@ function calculate() {
       results[key] = { status: 'shortage', calcStatus: 'shortage', shortages };
     }
   }
-  return { results, stockPool, incomingPool, deductedStock, deductedIncoming };
+  return { results, stockPool, incomingPool, deductedStock, deductedIncoming, earliestMonths };
 }
 
 // ─────────────────────────────────────────────
 // RENDER
 // ─────────────────────────────────────────────
 function renderAll() {
-  const { results, stockPool, incomingPool, deductedStock, deductedIncoming } = calculate();
-  renderCards(results);
+  const { results, stockPool, incomingPool, deductedStock, deductedIncoming, earliestMonths } = calculate();
+  renderCards(results, earliestMonths);
   renderSummary(results);
   renderStockTable(stockPool, incomingPool, deductedStock, deductedIncoming);
 }
 
-function renderCards(results) {
+function renderCards(results, earliestMonths) {
   const list = document.getElementById('card-list');
   list.innerHTML = '';
   const monthGroups = [];
@@ -707,7 +803,7 @@ function renderCards(results) {
 
     const groupDiv = document.createElement('div');
     groupDiv.className = 'month-group';
-    
+
     const hdr = document.createElement('div');
     hdr.className = 'month-header' + (isCollapsed ? ' collapsed' : '');
     hdr.innerHTML = `
@@ -726,11 +822,16 @@ function renderCards(results) {
     cardsDiv.className = 'month-cards' + (isCollapsed ? ' collapsed' : '');
 
     keys.forEach(key => {
-      const result = results[key];
-      const checked = cardChecked[key];
+      const result   = results[key];
+      const checked  = cardChecked[key];
+      const earliest = earliestMonths[key];
+      const targetMonth  = demandMap[key].month;
+      const adoptedMonth = getAdoptedMonth(key);
+
       const card = document.createElement('div');
       card.className = `demand-card ${result.calcStatus === 'ok' ? 'calc-ok' : 'calc-short'} ${!checked ? 'frozen' : ''}`;
-      
+
+      // Status column
       let statusHtml = '';
       if (!checked) statusHtml = `<div class="card-status status-frozen-txt">—</div>`;
       else if (result.status === 'ok') statusHtml = `<div class="card-status status-ok">OK</div>`;
@@ -739,17 +840,71 @@ function renderCards(results) {
         statusHtml = `<div class="card-status status-short">缺料<span class="shortage-tip">${tip}</span></div>`;
       }
 
+      // Earliest fulfillable month display
+      let earliestClass, earliestDisplay;
+      if (earliest === 0) {
+        earliestClass   = 'mth-earliest-ok';
+        earliestDisplay = '庫存足';
+      } else if (earliest === null) {
+        earliestClass   = 'mth-earliest-none';
+        earliestDisplay = '—';
+      } else if (earliest <= adoptedMonth) {
+        earliestClass   = 'mth-earliest-ok';
+        earliestDisplay = String(earliest);
+      } else {
+        earliestClass   = 'mth-earliest-late';
+        earliestDisplay = String(earliest);
+      }
+
+      // Snap button: enabled only when earliest is a concrete month different from adopted
+      const snapEnabled = (typeof earliest === 'number') && earliest > 0 && earliest !== adoptedMonth;
+
+      // Dropdown options: all months >= target from supply data, ensuring adopted month is included
+      const optionMonths = getMonthOptions(key);
+      if (!optionMonths.includes(adoptedMonth)) optionMonths.push(adoptedMonth);
+      optionMonths.sort((a, b) => a - b);
+      const optionsHtml = optionMonths
+        .map(m => `<option value="${m}" ${m === adoptedMonth ? 'selected' : ''}>${m}</option>`)
+        .join('');
+
       const specs = demandMap[key].specs.map(s => `${s.spec}×${s.qty}`).join(' ');
       card.innerHTML = `
         <input type="checkbox" class="card-checkbox" ${checked ? 'checked' : ''}>
-        <div class="card-priority">#${cardOrder.indexOf(key)+1}</div>
+        <div class="card-priority">#${cardOrder.indexOf(key) + 1}</div>
         <div class="card-main">
           <div class="card-name">${key}</div>
           <div class="card-specs">${specs}</div>
+          <div class="card-month-row">
+            <span class="mth-label">目標</span><span class="mth-val">${targetMonth}</span>
+            <span class="mth-sep">/</span>
+            <span class="mth-label">採用</span><select class="mth-select">${optionsHtml}</select>
+            <span class="mth-sep">/</span>
+            <span class="mth-label">最早</span><span class="${earliestClass}">${earliestDisplay}</span>
+            <button class="mth-snap" ${snapEnabled ? '' : 'disabled'} title="採用最早可滿足月">↙最早</button>
+          </div>
         </div>
         ${statusHtml}
       `;
-      card.querySelector('.card-checkbox').onchange = e => { cardChecked[key] = e.target.checked; renderAll(); };
+
+      card.querySelector('.card-checkbox').onchange = e => {
+        cardChecked[key] = e.target.checked;
+        renderAll();
+      };
+      card.querySelector('.mth-select').onchange = e => {
+        e.stopPropagation();
+        adoptedMonthMap[key] = Number(e.target.value);
+        renderAll();
+      };
+      // Prevent drag starting when clicking inside the month row
+      card.querySelector('.card-month-row').addEventListener('mousedown', e => e.stopPropagation());
+      if (snapEnabled) {
+        card.querySelector('.mth-snap').onclick = e => {
+          e.stopPropagation();
+          adoptedMonthMap[key] = earliest;
+          renderAll();
+        };
+      }
+
       setupDrag(card, key);
       cardsDiv.appendChild(card);
     });
@@ -796,12 +951,12 @@ function renderStockTable(stockPool, incomingPool, deductedStock, deductedIncomi
 
 function downloadState() {
   const wb = XLSX.utils.book_new();
-  const data = [['Priority','Demand','Month','Checked','Status','Shortage Detail']];
+  const data = [['Priority','Demand','目標月','採用月','Checked','Status','Shortage Detail']];
   const { results } = calculate();
   cardOrder.forEach((k, i) => {
     const r = results[k];
     const detail = r.shortages.map(s => `${s.spec} 缺${fmt(s.lack)}`).join('; ');
-    data.push([i+1, k, demandMap[k].month, cardChecked[k]?'✓':'—', r.status, detail]);
+    data.push([i + 1, k, demandMap[k].month, getAdoptedMonth(k), cardChecked[k] ? '✓' : '—', r.status, detail]);
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Result');
   XLSX.writeFile(wb, 'kit-check-state.xlsx');
