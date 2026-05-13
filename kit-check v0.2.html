@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>齊套料管理工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+TC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: #2a3048;
+    --border2: #3a4460;
+    --text: #d4daf0;
+    --text-dim: #6b7799;
+    --text-muted: #3d4a6a;
+    --accent: #4f7cff;
+    --accent-dim: #1e2d5a;
+    --green: #2dd4a0;
+    --green-dim: #0d3326;
+    --green-bg: #0a2a20;
+    --red: #ff5c72;
+    --red-dim: #3d0d17;
+    --red-bg: #2a0810;
+    --yellow: #f5c842;
+    --yellow-dim: #3a2e05;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans TC', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    gap: 12px;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .logo span { color: var(--text-dim); font-weight: 400; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .file-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .file-label:hover { background: #3d6aee; }
+  .file-label input { display: none; }
+
+  .file-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── ERROR BAR ── */
+  #error-bar {
+    display: none;
+    background: var(--red-dim);
+    border-bottom: 1px solid var(--red);
+    color: var(--red);
+    padding: 6px 20px;
+    font-size: 12px;
+    font-family: var(--mono);
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .panel-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .panel-header-label { color: var(--text); font-weight: 600; font-size: 12px; }
+
+  .card-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  /* ── DEMAND CARD ── */
+  .demand-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px 5px 0;
+    cursor: grab;
+    user-select: none;
+    transition: border-color 0.15s, opacity 0.15s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-height: 32px;
+    border-left: 3px solid var(--border2);
+  }
+
+  .demand-card:active { cursor: grabbing; }
+  .demand-card.dragging { opacity: 0.4; }
+  .demand-card.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+
+  .demand-card.calc-ok    { border-left-color: var(--green); }
+  .demand-card.calc-short { border-left-color: var(--red); }
+  .demand-card.frozen { opacity: 0.45; }
+
+  .card-checkbox {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    margin: 0 6px 0 8px;
+  }
+
+  .card-priority {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    width: 20px;
+    flex-shrink: 0;
+    text-align: right;
+    margin-right: 6px;
+  }
+
+  .card-name {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+    width: 52px;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-specs {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 6px;
+  }
+
+  .card-status {
+    font-size: 10px;
+    font-family: var(--mono);
+    flex-shrink: 0;
+    text-align: right;
+    min-width: 52px;
+  }
+
+  .status-ok    { color: var(--green); }
+  .status-short { color: var(--red); }
+  .status-frozen-txt { color: var(--text-muted); }
+
+  .shortage-tip {
+    font-size: 9px;
+    color: var(--red);
+    opacity: 0.8;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    flex: 1;
+    min-width: 280px;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .right-top {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .summary-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    text-align: center;
+  }
+
+  .summary-num {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .summary-label {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .summary-card.ok .summary-num { color: var(--green); }
+  .summary-card.short .summary-num { color: var(--red); }
+  .summary-card.frozen-s .summary-num { color: var(--text-muted); }
+  .summary-card.total .summary-num { color: var(--accent); }
+
+  /* ── STOCK TABLE ── */
+  .right-bottom {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .section-header {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    background: var(--surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 10px;
+    padding: 4px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  thead th:first-child { text-align: left; }
+
+  tbody td {
+    padding: 4px 8px;
+    text-align: right;
+    color: var(--text);
+  }
+
+  tbody td:first-child {
+    text-align: left;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .num-pos { color: var(--green); }
+  .num-neg { color: var(--red); }
+  .num-zero { color: var(--text-muted); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  /* ── MONTH GROUP ── */
+  .month-group { margin-bottom: 2px; }
+
+  .month-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    user-select: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    border-radius: 3px;
+    transition: background 0.1s;
+  }
+  .month-header:hover { background: var(--surface2); }
+  .month-header .mh-arrow { font-size: 9px; transition: transform 0.15s; }
+  .month-header.collapsed .mh-arrow { transform: rotate(-90deg); }
+  .month-header .mh-label { color: var(--accent); font-weight: 600; letter-spacing: 0.05em; }
+  .month-header .mh-count { color: var(--text-muted); }
+  .month-header .mh-ok   { color: var(--green); }
+  .month-header .mh-short{ color: var(--red); margin-left: 4px; }
+
+  .month-cards { display: flex; flex-direction: column; gap: 3px; padding: 0 0 4px 0; }
+  .month-cards.collapsed { display: none; }
+
+  .month-drop-zone {
+    height: 4px;
+    border-radius: 2px;
+    transition: height 0.1s, background 0.1s;
+  }
+  .month-drop-zone.drag-over-zone {
+    height: 16px;
+    background: var(--accent-dim);
+    border: 1px dashed var(--accent);
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">KIT<span>·</span>CHECK <span>// 齊套料管理</span></div>
+  <div class="header-right">
+    <div class="file-status" id="file-status">尚未載入檔案</div>
+    <button class="file-label" id="dl-btn" onclick="downloadState()" style="display:none">↓ 下載狀態</button>
+    <label class="file-label">
+      ↑ 上傳 XLSX
+      <input type="file" id="file-input" accept=".xlsx,.xls">
+    </label>
+  </div>
+</header>
+
+<div id="error-bar"></div>
+
+<div class="main">
+  <div class="left-panel">
+    <div class="panel-header">
+      <span class="panel-header-label">需求列表</span>
+      <span id="card-count">— 筆</span>
+    </div>
+    <div class="card-list" id="card-list">
+      <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <div>上傳 XLSX 以載入需求</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="right-top">
+      <div class="summary-grid">
+        <div class="summary-card ok">
+          <div class="summary-num" id="s-ok">—</div>
+          <div class="summary-label">✅ 可滿足</div>
+        </div>
+        <div class="summary-card short">
+          <div class="summary-num" id="s-short">—</div>
+          <div class="summary-label">❌ 缺料</div>
+        </div>
+        <div class="summary-card frozen-s">
+          <div class="summary-num" id="s-frozen">—</div>
+          <div class="summary-label">凍結</div>
+        </div>
+        <div class="summary-card total">
+          <div class="summary-num" id="s-total">—</div>
+          <div class="summary-label">總需求數</div>
+        </div>
+      </div>
+    </div>
+    <div class="right-bottom">
+      <div class="section-header"><span>供給剩餘</span> // 扣料後總表</div>
+      <div class="table-wrap">
+        <table id="stock-table">
+          <thead>
+            <tr>
+              <th>SPEC</th>
+              <th>可用庫存</th>
+              <th>可用進料</th>
+              <th>剩餘庫存</th>
+              <th>剩餘進料</th>
+              <th>可用合計</th>
+            </tr>
+          </thead>
+          <tbody id="stock-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let demandMap   = {};
+let supplyRows  = [];
+let cardOrder   = [];
+let cardChecked = {};
+let collapsedMonths = {};
+
+// ─────────────────────────────────────────────
+// FILE UPLOAD
+// ─────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(ev.target.result, { type: 'array' });
+      parseWorkbook(wb, file.name);
+    } catch(err) { showError('讀取 XLSX 失敗：' + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+function parseWorkbook(wb, filename, stateOverride) {
+  clearError();
+  const sheetNames = wb.SheetNames.map(s => s.toLowerCase());
+  const missing = [];
+  if (!sheetNames.includes('demand')) missing.push('Demand');
+  if (!sheetNames.includes('supply')) missing.push('Supply');
+  if (missing.length) { showError(`缺少 Sheet：${missing.join('、')}`); return; }
+
+  const demandSheet = wb.Sheets[wb.SheetNames[sheetNames.indexOf('demand')]];
+  const supplySheet = wb.Sheets[wb.SheetNames[sheetNames.indexOf('supply')]];
+  const isBlankRow = obj => Object.values(obj).every(v => String(v).trim() === '');
+  const demandRows    = XLSX.utils.sheet_to_json(demandSheet, { defval: '' }).filter(r => !isBlankRow(r));
+  const supplyRowsRaw = XLSX.utils.sheet_to_json(supplySheet, { defval: '' }).filter(r => !isBlankRow(r));
+
+  const dRequired = ['Demand','SPEC','Qty','Month'];
+  const sRequired = ['SPEC','Qty','Month'];
+
+  const normalize = (obj, fields) => {
+    const out = {}, keys = Object.keys(obj);
+    fields.forEach(f => {
+      const match = keys.find(k => k.trim().toLowerCase() === f.toLowerCase());
+      out[f] = match !== undefined ? String(obj[match]).trim() : '';
+    });
+    return out;
+  };
+
+  const newDemandMap = {};
+  const demandErrors = [];
+  demandRows.forEach((row, i) => {
+    const r = normalize(row, dRequired);
+    const rowNum = i + 2;
+    if (!r.Demand || !r.SPEC) return;
+    const qty   = Number(r.Qty);
+    const month = Number(r.Month);
+    if (isNaN(qty) || isNaN(month)) return;
+  
+    const key = r.Demand;
+    if (!newDemandMap[key]) newDemandMap[key] = { month, specs: [] };
+    newDemandMap[key].specs.push({ spec: r.SPEC, qty });
+  });
+
+  const newSupplyRows = [];
+  supplyRowsRaw.forEach(row => {
+    const r = normalize(row, sRequired);
+    if (!r.SPEC) return;
+    const qty = Number(r.Qty);
+    if (isNaN(qty)) return;
+    const mRaw = String(r.Month).trim().toUpperCase();
+    let month = mRaw === 'STOCK' ? 'STOCK' : Number(r.Month);
+    newSupplyRows.push({ spec: r.SPEC, qty, month });
+  });
+
+  demandMap  = newDemandMap;
+  supplyRows = newSupplyRows;
+  
+  if (stateOverride) {
+    cardOrder = stateOverride.cardOrder.filter(k => newDemandMap[k]);
+    const missingKeys = Object.keys(newDemandMap).filter(k => !cardOrder.includes(k));
+    cardOrder = [...cardOrder, ...missingKeys];
+    cardChecked = {};
+    cardOrder.forEach(k => { cardChecked[k] = stateOverride.cardChecked?.[k] ?? true; });
+    collapsedMonths = stateOverride.collapsedMonths || {};
+  } else {
+    cardOrder = Object.keys(newDemandMap).sort((a,b) => demandMap[a].month - demandMap[b].month);
+    cardOrder.forEach(k => cardChecked[k] = true);
+  }
+
+  document.getElementById('file-status').textContent = filename;
+  document.getElementById('dl-btn').style.display = '';
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+// CALCULATION ENGINE
+// ─────────────────────────────────────────────
+function calculate() {
+  const stockPool = {};
+  const incomingPool = [];
+  supplyRows.forEach(r => {
+    if (r.month === 'STOCK') { stockPool[r.spec] = (stockPool[r.spec] || 0) + r.qty; }
+    else { incomingPool.push({ spec: r.spec, qty: r.qty, month: r.month, remaining: r.qty }); }
+  });
+  incomingPool.sort((a,b) => a.month - b.month);
+
+  const deductedStock = {}, deductedIncoming = {}, results = {};
+
+  const peekShortages = (key) => {
+    const { month, specs } = demandMap[key];
+    const sh = [];
+    for (const { spec, qty } of specs) {
+      const sAvail = stockPool[spec] || 0;
+      const iAvail = incomingPool.filter(r => r.spec === spec && r.month <= month).reduce((s,r) => s + r.remaining, 0);
+      if (sAvail + iAvail < qty) sh.push({ spec, lack: qty - sAvail - iAvail });
+    }
+    return sh;
+  };
+
+  for (const key of cardOrder) {
+    const demand = demandMap[key];
+    if (!cardChecked[key]) {
+      const fSh = peekShortages(key);
+      results[key] = { status: 'frozen', calcStatus: fSh.length === 0 ? 'ok' : 'shortage', shortages: fSh };
+      continue;
+    }
+
+    const { month, specs } = demand;
+    const shortages = [];
+    for (const { spec, qty } of specs) {
+      const sA = stockPool[spec] || 0;
+      const iA = incomingPool.filter(r => r.spec === spec && r.month <= month).reduce((s,r) => s + r.remaining, 0);
+      if (sA + iA < qty) shortages.push({ spec, lack: qty - sA - iA });
+    }
+
+    if (shortages.length === 0) {
+      for (const { spec, qty } of specs) {
+        let toDeduct = qty;
+        const fromStock = Math.min(toDeduct, stockPool[spec] || 0);
+        stockPool[spec] -= fromStock;
+        deductedStock[spec] = (deductedStock[spec] || 0) + fromStock;
+        toDeduct -= fromStock;
+        if (toDeduct > 0) {
+          for (const row of incomingPool) {
+            if (row.spec !== spec || row.month > month) continue;
+            const fromInc = Math.min(toDeduct, row.remaining);
+            row.remaining -= fromInc;
+            deductedIncoming[spec] = (deductedIncoming[spec] || 0) + fromInc;
+            toDeduct -= fromInc;
+            if (toDeduct <= 0) break;
+          }
+        }
+      }
+      results[key] = { status: 'ok', calcStatus: 'ok', shortages: [] };
+    } else {
+      results[key] = { status: 'shortage', calcStatus: 'shortage', shortages };
+    }
+  }
+  return { results, stockPool, incomingPool, deductedStock, deductedIncoming };
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function renderAll() {
+  const { results, stockPool, incomingPool, deductedStock, deductedIncoming } = calculate();
+  renderCards(results);
+  renderSummary(results);
+  renderStockTable(stockPool, incomingPool, deductedStock, deductedIncoming);
+}
+
+function renderCards(results) {
+  const list = document.getElementById('card-list');
+  list.innerHTML = '';
+  const monthGroups = [];
+  const monthIndex = {};
+
+  cardOrder.forEach(key => {
+    const m = demandMap[key].month;
+    if (monthIndex[m] === undefined) {
+      monthIndex[m] = monthGroups.length;
+      monthGroups.push({ month: m, keys: [] });
+    }
+    monthGroups[monthIndex[m]].keys.push(key);
+  });
+
+  monthGroups.forEach(group => {
+    const { month, keys } = group;
+    const isCollapsed = !!collapsedMonths[month];
+    const okCount = keys.filter(k => results[k].calcStatus === 'ok').length;
+    const shortCount = keys.filter(k => results[k].calcStatus === 'shortage').length;
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'month-group';
+    
+    const hdr = document.createElement('div');
+    hdr.className = 'month-header' + (isCollapsed ? ' collapsed' : '');
+    hdr.innerHTML = `
+      <span class="mh-arrow">▾</span>
+      <span class="mh-label">${month}</span>
+      <span class="mh-count">${keys.length}筆</span>
+      ${okCount > 0 ? `<span class="mh-ok">✓${okCount}</span>` : ''}
+      ${shortCount > 0 ? `<span class="mh-short">✗${shortCount}</span>` : ''}
+    `;
+    hdr.onclick = () => {
+      collapsedMonths[month] = !collapsedMonths[month];
+      renderAll();
+    };
+
+    const cardsDiv = document.createElement('div');
+    cardsDiv.className = 'month-cards' + (isCollapsed ? ' collapsed' : '');
+
+    keys.forEach(key => {
+      const result = results[key];
+      const checked = cardChecked[key];
+      const card = document.createElement('div');
+      card.className = `demand-card ${result.calcStatus === 'ok' ? 'calc-ok' : 'calc-short'} ${!checked ? 'frozen' : ''}`;
+      
+      let statusHtml = '';
+      if (!checked) statusHtml = `<div class="card-status status-frozen-txt">—</div>`;
+      else if (result.status === 'ok') statusHtml = `<div class="card-status status-ok">OK</div>`;
+      else {
+        const tip = result.shortages.map(s => `${s.spec} 缺${s.lack}`).join('; ');
+        statusHtml = `<div class="card-status status-short">缺料<span class="shortage-tip">${tip}</span></div>`;
+      }
+
+      const specs = demandMap[key].specs.map(s => `${s.spec}×${s.qty}`).join(' ');
+      card.innerHTML = `
+        <input type="checkbox" class="card-checkbox" ${checked ? 'checked' : ''}>
+        <div class="card-priority">#${cardOrder.indexOf(key)+1}</div>
+        <div class="card-name">${key}</div>
+        <div class="card-specs">${specs}</div>
+        ${statusHtml}
+      `;
+      card.querySelector('.card-checkbox').onchange = e => { cardChecked[key] = e.target.checked; renderAll(); };
+      setupDrag(card, key);
+      cardsDiv.appendChild(card);
+    });
+
+    groupDiv.appendChild(hdr);
+    groupDiv.appendChild(cardsDiv);
+    list.appendChild(groupDiv);
+  });
+  document.getElementById('card-count').textContent = `${cardOrder.length} 筆`;
+}
+
+function renderSummary(results) {
+  let ok = 0, short = 0, frozen = 0;
+  Object.values(results).forEach(r => {
+    if (r.status === 'ok') ok++;
+    else if (r.status === 'shortage') short++;
+    else frozen++;
+  });
+  document.getElementById('s-ok').textContent = ok;
+  document.getElementById('s-short').textContent = short;
+  document.getElementById('s-frozen').textContent = frozen;
+  document.getElementById('s-total').textContent = cardOrder.length;
+}
+
+function renderStockTable(stockPool, incomingPool, deductedStock, deductedIncoming) {
+  const tbody = document.getElementById('stock-tbody');
+  tbody.innerHTML = '';
+  const specs = [...new Set(supplyRows.map(r => r.spec))];
+  specs.forEach(spec => {
+    const tr = document.createElement('tr');
+    const sRem = stockPool[spec] || 0;
+    const iRem = incomingPool.filter(r => r.spec === spec).reduce((s,r) => s + r.remaining, 0);
+    tr.innerHTML = `
+      <td>${spec}</td>
+      <td>${(deductedStock[spec]||0)+sRem}</td>
+      <td>${(deductedIncoming[spec]||0)+iRem}</td>
+      <td class="${numClass(sRem)}">${fmt(sRem)}</td>
+      <td class="${numClass(iRem)}">${fmt(iRem)}</td>
+      <td class="${numClass(sRem+iRem)}">${fmt(sRem+iRem)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function downloadState() {
+  const wb = XLSX.utils.book_new();
+  const data = [['Priority','Demand','Month','Checked','Status','Shortage Detail']];
+  const { results } = calculate();
+  cardOrder.forEach((k, i) => {
+    const r = results[k];
+    const detail = r.shortages.map(s => `${s.spec} 缺${fmt(s.lack)}`).join('; ');
+    data.push([i+1, k, demandMap[k].month, cardChecked[k]?'✓':'—', r.status, detail]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Result');
+  XLSX.writeFile(wb, 'kit-check-state.xlsx');
+}
+
+let dragSrcKey = null;
+function setupDrag(card, key) {
+  card.draggable = true;
+  card.ondragstart = e => { dragSrcKey = key; card.classList.add('dragging'); };
+  card.ondragend = () => card.classList.remove('dragging');
+  card.ondragover = e => e.preventDefault();
+  card.ondrop = e => {
+    e.preventDefault();
+    if (dragSrcKey && dragSrcKey !== key) {
+      const from = cardOrder.indexOf(dragSrcKey), to = cardOrder.indexOf(key);
+      cardOrder.splice(from, 1);
+      cardOrder.splice(to, 0, dragSrcKey);
+      renderAll();
+    }
+  };
+}
+
+function fmt(n) { return Number(n).toLocaleString(); }
+function numClass(n) { return n > 0 ? 'num-pos' : n < 0 ? 'num-neg' : 'num-zero'; }
+function showError(msg) { const b = document.getElementById('error-bar'); b.textContent = msg; b.style.display = 'block'; }
+function clearError() { document.getElementById('error-bar').style.display = 'none'; }
+</script>
+</body>
+</html>
