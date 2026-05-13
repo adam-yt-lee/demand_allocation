@@ -536,9 +536,158 @@ function renderStockTable(committedByKey) {
         <td>${fmt(committed)}</td>
         <td class="${numClass(balance)}">${fmt(balance)}</td>
       `;
+      tr.addEventListener('mouseenter', () => showMaterialTooltip(tr, r.group, r.name));
+      tr.addEventListener('mouseleave', hideMaterialTooltip);
       tbody.appendChild(tr);
     });
   });
+}
+
+// ─────────────────────────────────────────────
+// MATERIAL HOVER TOOLTIP (right-panel rows)
+// ─────────────────────────────────────────────
+function getMaterialUsage(group, name) {
+  const stock = supplyRows
+    .filter(r => r.group === group && r.name === name && r.month === 'STOCK')
+    .reduce((s, r) => s + r.qty, 0);
+
+  const batches = supplyRows
+    .filter(r => r.group === group && r.name === name && r.month !== 'STOCK')
+    .map(r => ({ month: r.month, qty: r.qty }))
+    .sort((a, b) => a.month - b.month);
+
+  const usedBy = [];
+  const couldUseBy = [];
+
+  cardOrder.forEach(key => {
+    const demand = demandMap[key];
+    demand.items.forEach((item, idx) => {
+      if (item.group !== group) return;
+      const effectiveName = getEffectiveName(key, idx);
+      const entry = {
+        key,
+        qty: item.qty,
+        month: demand.month,
+        checked: !!cardChecked[key],
+        currentName: effectiveName,
+      };
+      if (effectiveName === name) {
+        usedBy.push(entry);
+      } else {
+        couldUseBy.push(entry);
+      }
+    });
+  });
+
+  usedBy.sort((a, b) => a.month - b.month || a.key.localeCompare(b.key));
+  couldUseBy.sort((a, b) => a.month - b.month || a.key.localeCompare(b.key));
+
+  return { stock, batches, usedBy, couldUseBy };
+}
+
+let materialTooltipEl = null;
+
+function ensureMaterialTooltip() {
+  if (materialTooltipEl) return materialTooltipEl;
+  materialTooltipEl = document.createElement('div');
+  materialTooltipEl.className = 'material-tooltip';
+  materialTooltipEl.style.display = 'none';
+  document.body.appendChild(materialTooltipEl);
+  return materialTooltipEl;
+}
+
+function buildMaterialTooltipHtml(group, name) {
+  const { stock, batches, usedBy, couldUseBy } = getMaterialUsage(group, name);
+  const totalUsed    = usedBy.reduce((s, e) => s + e.qty, 0);
+  const totalCould   = couldUseBy.reduce((s, e) => s + e.qty, 0);
+
+  let html = `<div class="mt-header">
+    <span class="mt-group">${esc(group)}</span>
+    ${name ? `<span class="mt-sep">›</span><span class="mt-name">${esc(name)}</span>` : ''}
+  </div>`;
+
+  html += `<div class="mt-section">
+    <div class="mt-section-title"><span>📦 來料批次</span></div>
+    <div class="mt-rows">`;
+  if (stock > 0) {
+    html += `<div class="mt-row"><span class="mt-label">庫存 Stock</span><span class="mt-val">${fmt(stock)}</span></div>`;
+  }
+  batches.forEach(b => {
+    html += `<div class="mt-row"><span class="mt-label">${b.month}</span><span class="mt-val">${fmt(b.qty)}</span></div>`;
+  });
+  if (stock === 0 && !batches.length) {
+    html += `<div class="mt-empty">— 無資料 —</div>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div class="mt-section">
+    <div class="mt-section-title"><span>✓ 已使用</span><span class="mt-section-sum">${usedBy.length} 筆 · ${fmt(totalUsed)}</span></div>
+    <div class="mt-rows">`;
+  if (usedBy.length) {
+    usedBy.forEach(e => {
+      const cls = e.checked ? '' : ' mt-frozen';
+      html += `<div class="mt-row${cls}">
+        <span class="mt-label">${esc(e.key)} <span class="mt-mo">${e.month}</span></span>
+        <span class="mt-val">${fmt(e.qty)}</span>
+      </div>`;
+    });
+  } else {
+    html += `<div class="mt-empty">— 尚未指派 —</div>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div class="mt-section">
+    <div class="mt-section-title"><span>○ 可用未使用</span><span class="mt-section-sum">${couldUseBy.length} 筆 · ${fmt(totalCould)}</span></div>
+    <div class="mt-rows">`;
+  if (couldUseBy.length) {
+    couldUseBy.forEach(e => {
+      const cls = e.checked ? '' : ' mt-frozen';
+      const cur = e.currentName ? esc(e.currentName) : '未選';
+      html += `<div class="mt-row${cls}">
+        <span class="mt-label">${esc(e.key)} <span class="mt-mo">${e.month}</span> <span class="mt-cur">→ ${cur}</span></span>
+        <span class="mt-val">${fmt(e.qty)}</span>
+      </div>`;
+    });
+  } else {
+    html += `<div class="mt-empty">— 無 —</div>`;
+  }
+  html += `</div></div>`;
+
+  return html;
+}
+
+function showMaterialTooltip(rowEl, group, name) {
+  const tt = ensureMaterialTooltip();
+  tt.innerHTML = buildMaterialTooltipHtml(group, name);
+  tt.style.display = 'block';
+  // Reset to measure natural size, then clamp/position
+  tt.style.left = '-9999px';
+  tt.style.top = '0px';
+
+  const rect = rowEl.getBoundingClientRect();
+  const ttW = tt.offsetWidth;
+  const ttH = tt.offsetHeight;
+  const pad = 8;
+
+  let left = rect.left - ttW - pad;
+  if (left < pad) {
+    left = rect.right + pad;
+    if (left + ttW > window.innerWidth - pad) {
+      left = Math.max(pad, window.innerWidth - ttW - pad);
+    }
+  }
+
+  let top = rect.top;
+  if (top + ttH > window.innerHeight - pad) {
+    top = Math.max(pad, window.innerHeight - ttH - pad);
+  }
+
+  tt.style.left = left + 'px';
+  tt.style.top  = top  + 'px';
+}
+
+function hideMaterialTooltip() {
+  if (materialTooltipEl) materialTooltipEl.style.display = 'none';
 }
 
 // ─────────────────────────────────────────────

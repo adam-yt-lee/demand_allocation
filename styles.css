@@ -216,6 +216,54 @@
     z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none;
   }
 
+  /* ── MATERIAL HOVER TOOLTIP ── */
+  tbody tr.stock-item-row { cursor: help; }
+  tbody tr.stock-item-row:hover td { background: var(--surface2); }
+  .material-tooltip {
+    position: fixed;
+    z-index: 10000;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px 12px;
+    width: 320px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.6);
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+  }
+  .mt-header { padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 8px; white-space: normal; word-break: break-all; }
+  .mt-group { color: var(--text-dim); font-size: 10px; }
+  .mt-sep { color: var(--text-muted); margin: 0 4px; }
+  .mt-name { color: var(--accent); font-weight: 600; font-size: 11px; }
+  .mt-section { margin-bottom: 10px; }
+  .mt-section:last-child { margin-bottom: 0; }
+  .mt-section-title {
+    color: var(--text);
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
+    border-bottom: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: .04em;
+  }
+  .mt-section-sum { color: var(--text-muted); font-size: 9px; font-weight: 400; }
+  .mt-rows { padding: 0 2px; }
+  .mt-row { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-size: 10px; line-height: 1.4; }
+  .mt-label { color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mt-mo { color: var(--text-muted); font-size: 9px; margin-left: 4px; }
+  .mt-cur { color: var(--text-dim); font-size: 9px; }
+  .mt-val { color: var(--accent); font-weight: 600; flex-shrink: 0; }
+  .mt-empty { color: var(--text-muted); font-size: 10px; padding: 2px 0; font-style: italic; }
+  .mt-frozen { opacity: 0.45; }
+  .mt-frozen .mt-label::after { content: ' ❄'; color: var(--text-muted); }
+
   /* ── EMPTY STATE ── */
   .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); font-family: var(--mono); font-size: 12px; }
 
