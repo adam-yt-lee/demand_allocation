@@ -273,7 +273,12 @@ let nameSelections  = {}; // { "DemandKey_idx": selectedName }
 function getEffectiveName(key, idx) {
   const k = `${key}_${idx}`;
   if (nameSelections.hasOwnProperty(k)) return nameSelections[k];
-  return demandMap[key].items[idx].name || '';
+
+  const item = demandMap[key].items[idx];
+  const names = getNamesForGroup(item.group);
+  if (names.length === 1) return names[0];
+
+  return item.name || '';
 }
 
 function getNamesForGroup(group) {
