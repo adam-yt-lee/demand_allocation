@@ -376,7 +376,7 @@ function parseWorkbook(wb, filename) {
   cardExpanded    = {};
   collapsedMonths = {};
   adoptedMonthMap = {};
-  cardOrder.forEach(k => { cardChecked[k] = false; cardExpanded[k] = false; });
+  cardOrder.forEach(k => { cardChecked[k] = true; cardExpanded[k] = false; });
 
   document.getElementById('file-status').textContent = filename;
   document.getElementById('dl-btn').style.display = '';
