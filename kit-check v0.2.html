@@ -161,7 +161,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 5px 8px 5px 0;
+    padding: 3px 8px 3px 0;
     cursor: grab;
     user-select: none;
     transition: border-color 0.15s, opacity 0.15s;
@@ -200,25 +200,39 @@
     margin-right: 6px;
   }
 
+  .card-main {
+    flex: 1;
+    min-width: 0;
+    margin-right: 6px;
+    display: grid;
+    grid-template-rows: repeat(2, 1fr);
+    row-gap: 1px;
+  }
+
   .card-name {
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text);
-    width: 52px;
-    flex-shrink: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.1;
     white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
   }
 
   .card-specs {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-muted);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.1;
     white-space: nowrap;
-    margin-right: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .card-name::-webkit-scrollbar,
+  .card-specs::-webkit-scrollbar {
+    display: none;
   }
 
   .card-status {
@@ -347,6 +361,11 @@
     padding: 4px 8px;
     text-align: right;
     color: var(--text);
+    border-bottom: 1px solid rgba(212, 218, 240, 0.12);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 
   tbody td:first-child {
@@ -575,11 +594,11 @@ function parseWorkbook(wb, filename, stateOverride) {
     const missingKeys = Object.keys(newDemandMap).filter(k => !cardOrder.includes(k));
     cardOrder = [...cardOrder, ...missingKeys];
     cardChecked = {};
-    cardOrder.forEach(k => { cardChecked[k] = stateOverride.cardChecked?.[k] ?? true; });
+    cardOrder.forEach(k => { cardChecked[k] = stateOverride.cardChecked?.[k] ?? false; });
     collapsedMonths = stateOverride.collapsedMonths || {};
   } else {
     cardOrder = Object.keys(newDemandMap).sort((a,b) => demandMap[a].month - demandMap[b].month);
-    cardOrder.forEach(k => cardChecked[k] = true);
+    cardOrder.forEach(k => cardChecked[k] = false);
   }
 
   document.getElementById('file-status').textContent = filename;
@@ -723,8 +742,10 @@ function renderCards(results) {
       card.innerHTML = `
         <input type="checkbox" class="card-checkbox" ${checked ? 'checked' : ''}>
         <div class="card-priority">#${cardOrder.indexOf(key)+1}</div>
-        <div class="card-name">${key}</div>
-        <div class="card-specs">${specs}</div>
+        <div class="card-main">
+          <div class="card-name">${key}</div>
+          <div class="card-specs">${specs}</div>
+        </div>
         ${statusHtml}
       `;
       card.querySelector('.card-checkbox').onchange = e => { cardChecked[key] = e.target.checked; renderAll(); };
