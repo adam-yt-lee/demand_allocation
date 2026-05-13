@@ -291,6 +291,11 @@ let collapsedMonths = {};
 let adoptedMonthMap = {};
 let nameSelections  = {}; // { "DemandKey_idx": selectedName }
 
+function poolKey(group, name) {
+  return `${group}__${name}`;
+}
+
+
 function getEffectiveName(key, idx) {
   const k = `${key}_${idx}`;
   if (nameSelections.hasOwnProperty(k)) return nameSelections[k];
@@ -408,12 +413,13 @@ function parseWorkbook(wb, filename) {
 // CALCULATION ENGINE
 // ─────────────────────────────────────────────
 function calculate() {
-  // Build supply pools keyed by name
+  // Build supply pools keyed by group+name
   const stockPool   = {};
   const incomingPool = [];
   supplyRows.forEach(r => {
     if (r.month === 'STOCK') {
-      stockPool[r.name] = (stockPool[r.name] || 0) + r.qty;
+      const key = poolKey(r.group, r.name);
+      stockPool[key] = (stockPool[key] || 0) + r.qty;
     } else {
       incomingPool.push({ group: r.group, name: r.name, qty: r.qty, month: r.month, remaining: r.qty });
     }
@@ -437,9 +443,10 @@ function calculate() {
         return { group: item.group, origName: item.name, effectiveName: '', qty: item.qty,
                  available: null, gap: null, itemStatus: 'unresolved' };
       }
-      const sAvail = stockPool[effectiveName] || 0;
+      const supplyKey = poolKey(item.group, effectiveName);
+      const sAvail = stockPool[supplyKey] || 0;
       const iAvail = incomingPool
-        .filter(r => r.name === effectiveName && r.month <= adoptedMonth)
+        .filter(r => poolKey(r.group, r.name) === supplyKey && r.month <= adoptedMonth)
         .reduce((s, r) => s + r.remaining, 0);
       const available = sAvail + iAvail;
       const gap = available - item.qty;
@@ -458,12 +465,13 @@ function calculate() {
     if (cardChecked[key] && calcStatus === 'ok') {
       for (const item of itemResults) {
         let toDeduct = item.qty;
-        const fromStock = Math.min(toDeduct, stockPool[item.effectiveName] || 0);
-        stockPool[item.effectiveName] = (stockPool[item.effectiveName] || 0) - fromStock;
+        const supplyKey = poolKey(item.group, item.effectiveName);
+        const fromStock = Math.min(toDeduct, stockPool[supplyKey] || 0);
+        stockPool[supplyKey] = (stockPool[supplyKey] || 0) - fromStock;
         toDeduct -= fromStock;
         if (toDeduct > 0) {
           for (const r of incomingPool) {
-            if (r.name !== item.effectiveName || r.month > adoptedMonth) continue;
+            if (poolKey(r.group, r.name) !== supplyKey || r.month > adoptedMonth) continue;
             const take = Math.min(toDeduct, r.remaining);
             r.remaining -= take;
             toDeduct    -= take;
@@ -695,12 +703,13 @@ function renderStockTable(stockPool, incomingPool) {
   tbody.innerHTML = '';
   const seen = new Set();
   supplyRows.forEach(r => {
-    if (seen.has(r.name)) return;
-    seen.add(r.name);
-    const sOrig = supplyRows.filter(s => s.name === r.name && s.month === 'STOCK').reduce((a, s) => a + s.qty, 0);
-    const iOrig = supplyRows.filter(s => s.name === r.name && s.month !== 'STOCK').reduce((a, s) => a + s.qty, 0);
-    const sRem  = stockPool[r.name] || 0;
-    const iRem  = incomingPool.filter(s => s.name === r.name).reduce((a, s) => a + s.remaining, 0);
+    const key = poolKey(r.group, r.name);
+    if (seen.has(key)) return;
+    seen.add(key);
+    const sOrig = supplyRows.filter(s => poolKey(s.group, s.name) === key && s.month === 'STOCK').reduce((a, s) => a + s.qty, 0);
+    const iOrig = supplyRows.filter(s => poolKey(s.group, s.name) === key && s.month !== 'STOCK').reduce((a, s) => a + s.qty, 0);
+    const sRem  = stockPool[key] || 0;
+    const iRem  = incomingPool.filter(s => poolKey(s.group, s.name) === key).reduce((a, s) => a + s.remaining, 0);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${esc(r.group)}</td>
@@ -794,24 +803,27 @@ function _runOptimize() {
 
 function _solveAndApply() {
   // ── Build supply lookup ──────────────────────────────────────────
-  const stockPool      = {};   // name → qty
-  const incomingByName = {};   // name → [{qty, month}]  sorted asc
+  const stockPool      = {};   // group+name → qty
+  const incomingByKey  = {};   // group+name → [{qty, month}]  sorted asc
 
   for (const row of supplyRows) {
     if (row.month === 'STOCK') {
-      stockPool[row.name] = (stockPool[row.name] || 0) + row.qty;
+      const key = poolKey(row.group, row.name);
+      stockPool[key] = (stockPool[key] || 0) + row.qty;
     } else {
-      (incomingByName[row.name] = incomingByName[row.name] || [])
+      const key = poolKey(row.group, row.name);
+      (incomingByKey[key] = incomingByKey[key] || [])
         .push({ qty: row.qty, month: row.month });
     }
   }
-  for (const n in incomingByName)
-    incomingByName[n].sort((a, b) => a.month - b.month);
+  for (const k in incomingByKey)
+    incomingByKey[k].sort((a, b) => a.month - b.month);
 
   // Cumulative supply of `name` available up to `month`
-  function supplyAt(name, month) {
-    let t = stockPool[name] || 0;
-    for (const inc of (incomingByName[name] || []))
+  function supplyAt(group, name, month) {
+    const key = poolKey(group, name);
+    let t = stockPool[key] || 0;
+    for (const inc of (incomingByKey[key] || []))
       if (inc.month <= month) t += inc.qty;
     return t;
   }
@@ -826,7 +838,7 @@ function _solveAndApply() {
       const candidates = fixedName
         ? [fixedName]
         : getNamesForGroup(item.group).filter(n => n);
-      return { selKey, candidates, qty: item.qty, month, isFixed: !!fixedName };
+      return { selKey, candidates, qty: item.qty, month, group: item.group, isFixed: !!fixedName };
     });
     return { key, month, items };
   });
@@ -850,8 +862,8 @@ function _solveAndApply() {
   // consumedUpTo(name, m) = sum over all months mo ≤ m.
   // This correctly models the time-gated supply constraint:
   //   for each horizon m: cumulative demand ≤ cumulative supply.
-  function consumedUpTo(cons, name, month) {
-    const byM = cons[name];
+  function consumedUpTo(cons, group, name, month) {
+    const byM = cons[poolKey(group, name)];
     if (!byM) return 0;
     let s = 0;
     for (const mo in byM) if (+mo <= month) s += byM[mo];
@@ -875,15 +887,16 @@ function _solveAndApply() {
       if (i >= items.length) return true;
       const item = items[i];
       for (const name of item.candidates) {
-        const avail = supplyAt(name, item.month)
-                    - consumedUpTo(nc, name, item.month);
+        const avail = supplyAt(item.group, name, item.month)
+                    - consumedUpTo(nc, item.group, name, item.month);
         if (avail >= item.qty) {
-          if (!nc[name]) nc[name] = {};
-          const prev = nc[name][item.month] || 0;
-          nc[name][item.month] = prev + item.qty;
+          const key = poolKey(item.group, name);
+          if (!nc[key]) nc[key] = {};
+          const prev = nc[key][item.month] || 0;
+          nc[key][item.month] = prev + item.qty;
           if (!item.isFixed) na[item.selKey] = name;
           if (bt(i + 1)) return true;
-          nc[name][item.month] = prev;
+          nc[key][item.month] = prev;
           if (!item.isFixed) delete na[item.selKey];
         }
       }
