@@ -441,6 +441,7 @@
   <div class="logo">KIT<span>·</span>CHECK <span>// 齊套料管理</span></div>
   <div class="header-right">
     <div class="file-status" id="file-status">尚未載入檔案</div>
+    <button class="file-label" onclick="downloadTemplate()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text-dim)">↓ 下載範本</button>
     <button class="file-label" id="dl-btn" onclick="downloadState()" style="display:none">↓ 下載狀態</button>
     <label class="file-label">
       ↑ 上傳 XLSX
@@ -821,6 +822,13 @@ function setupDrag(card, key) {
       renderAll();
     }
   };
+}
+
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Demand','Material','Qty','Note']]), 'Demand');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Group','Material','Qty','Status']]), 'Material');
+  XLSX.writeFile(wb, 'kit-check-template.xlsx');
 }
 
 function fmt(n) { return Number(n).toLocaleString(); }
