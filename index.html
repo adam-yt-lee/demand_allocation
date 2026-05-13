@@ -281,6 +281,11 @@ function getEffectiveName(key, idx) {
   return item.name || '';
 }
 
+function hasSupplyMatch(group, name) {
+  if (!group || !name) return false;
+  return supplyRows.some(r => r.group === group && r.name === name);
+}
+
 function getNamesForGroup(group) {
   const seen = new Set(), result = [];
   supplyRows.forEach(r => {
@@ -403,6 +408,10 @@ function calculate() {
     // Per-item availability using current pool state (before this demand deducts)
     const itemResults = demand.items.map((item, idx) => {
       const effectiveName = getEffectiveName(key, idx);
+      if (effectiveName && !hasSupplyMatch(item.group, effectiveName)) {
+        return { group: item.group, origName: item.name, effectiveName: '', qty: item.qty,
+                 available: null, gap: null, itemStatus: 'ignored' };
+      }
       if (!effectiveName) {
         return { group: item.group, origName: item.name, effectiveName: '', qty: item.qty,
                  available: null, gap: null, itemStatus: 'unresolved' };
@@ -544,8 +553,10 @@ function renderCards(results) {
       }
 
       const unresCount = result.items.filter(i => i.itemStatus === 'unresolved').length;
+      const ignoredCount = result.items.filter(i => i.itemStatus === 'ignored').length;
       const metaText = `${demandMap[key].items.length}項` +
-        (unresCount > 0 ? ` · ${unresCount} 項未選 Name` : '');
+        (unresCount > 0 ? ` · ${unresCount} 項未選 Name` : '') +
+        (ignoredCount > 0 ? ` · ${ignoredCount} 項已忽略` : '');
 
       card.innerHTML = `
         <div class="card-header">
@@ -604,13 +615,17 @@ function buildDetailTable(key, items) {
     const names = getNamesForGroup(item.group);
     const effectiveName = getEffectiveName(key, idx);
     const isUnselected  = !effectiveName;
+    const isIgnored = item.itemStatus === 'ignored';
 
     const options = ['', ...names].map(n =>
       `<option value="${esc(n)}"${n===effectiveName?' selected':''}>${n ? esc(n) : '-- 未選擇 --'}</option>`
     ).join('');
 
     let availTd, gapTd;
-    if (item.available === null) {
+    if (isIgnored) {
+      availTd = `<td class="r gap-zero">IGNORED</td>`;
+      gapTd   = `<td class="r gap-zero">—</td>`;
+    } else if (item.available === null) {
       availTd = `<td class="r gap-zero">—</td>`;
       gapTd   = `<td class="r gap-zero">—</td>`;
     } else {
